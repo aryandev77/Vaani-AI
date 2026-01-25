@@ -1,1 +1,6 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/summarize-cultural-insights.ts';
+import '@/ai/flows/detect-and-preserve-emotion.ts';
+import '@/ai/flows/real-time-translation-with-context.ts';
