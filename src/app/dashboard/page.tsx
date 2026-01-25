@@ -1,8 +1,15 @@
 'use client';
 
-import { useActionState, useRef, useEffect } from 'react';
+import { useActionState, useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
-import { ArrowRight, LoaderCircle, Volume2, Play } from 'lucide-react';
+import {
+  ArrowRight,
+  LoaderCircle,
+  Volume2,
+  Play,
+  ThumbsUp,
+  ThumbsDown,
+} from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -31,6 +38,14 @@ import { SubmitButton } from '@/components/submit-button';
 import { Waveform } from '@/components/waveform';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const languages = [
   { value: 'english', label: 'English' },
@@ -60,6 +75,9 @@ export default function TranslationPage() {
   };
   const [state, dispatch] = useActionState(handleTranslation, initialState);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [translationDocId, setTranslationDocId] = useState<string | null>(null);
+  const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
+  const [correctedText, setCorrectedText] = useState('');
 
   const user = useUser();
   const firestore = useFirestore();
@@ -97,20 +115,72 @@ export default function TranslationPage() {
         date: serverTimestamp(),
         culturalContext: state.culturalContext || '',
         culturalInsights: state.culturalInsights || '',
-      }).catch(error => {
-        console.error('Error saving translation history:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Could not save to history',
-          description: error.message,
+      })
+        .then(docRef => {
+          setTranslationDocId(docRef.id);
+        })
+        .catch(error => {
+          console.error('Error saving translation history:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Could not save to history',
+            description: error.message,
+          });
         });
-      });
     }
   }, [state, user, firestore, toast]);
 
   const handlePlayAudio = () => {
     if (audioRef.current) {
       audioRef.current.play();
+    }
+  };
+
+  const handleHelpfulClick = () => {
+    toast({
+      title: 'Feedback received!',
+      description: 'Thank you for helping us improve.',
+    });
+  };
+
+  const handleNotHelpfulClick = () => {
+    setIsFeedbackDialogOpen(true);
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!user || !firestore || !translationDocId || !correctedText.trim()) {
+      toast({
+        variant: 'destructive',
+        title: 'Incomplete Feedback',
+        description: 'Please provide your improved translation.',
+      });
+      return;
+    }
+
+    const feedbackCol = collection(firestore, 'feedback');
+    try {
+      await addDoc(feedbackCol, {
+        userId: user.uid,
+        originalTranslationId: translationDocId,
+        sourceText: state.sourceText,
+        originalTranslatedText: state.translatedText,
+        userCorrectedText: correctedText,
+        timestamp: serverTimestamp(),
+      });
+
+      toast({
+        title: 'Feedback submitted!',
+        description: 'Thank you for helping our AI learn.',
+      });
+      setIsFeedbackDialogOpen(false);
+      setCorrectedText('');
+    } catch (error: any) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Submission Failed',
+        description: error.message || 'Could not submit your feedback.',
+      });
     }
   };
 
@@ -255,6 +325,83 @@ export default function TranslationPage() {
           </div>
         </CardContent>
       </Card>
+      {state.translatedText && !state.translatedText.startsWith('Error:') && (
+        <>
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="font-headline">
+                Was this translation helpful?
+              </CardTitle>
+              <CardDescription>
+                Your feedback is valuable in training our AI to be more
+                accurate.
+              </CardDescription>
+            </CardHeader>
+            <CardFooter className="gap-4">
+              <Button onClick={handleHelpfulClick}>
+                <ThumbsUp className="mr-2 h-4 w-4" /> Yes
+              </Button>
+              <Button variant="outline" onClick={handleNotHelpfulClick}>
+                <ThumbsDown className="mr-2 h-4 w-4" /> No
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Dialog
+            open={isFeedbackDialogOpen}
+            onOpenChange={setIsFeedbackDialogOpen}
+          >
+            <DialogContent className="sm:max-w-[625px]">
+              <DialogHeader>
+                <DialogTitle>Teach our AI</DialogTitle>
+                <DialogDescription>
+                  Provide a better translation to help us improve. Your
+                  corrections help train the model for everyone.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="source-text-feedback">Original Text</Label>
+                  <p
+                    id="source-text-feedback"
+                    className="rounded-md border bg-muted p-3 text-sm text-muted-foreground"
+                  >
+                    {state.sourceText}
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="ai-translation-feedback">
+                    AI Translation
+                  </Label>
+                  <p
+                    id="ai-translation-feedback"
+                    className="rounded-md border bg-muted p-3 text-sm text-muted-foreground"
+                  >
+                    {state.translatedText}
+                  </p>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="corrected-translation">
+                    Your improved translation
+                  </Label>
+                  <Textarea
+                    id="corrected-translation"
+                    value={correctedText}
+                    onChange={e => setCorrectedText(e.target.value)}
+                    placeholder="Enter the correct translation here..."
+                    className="min-h-[100px]"
+                  />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button onClick={handleSubmitFeedback} type="submit">
+                  Submit and Teach AI
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      )}
     </div>
   );
 }

@@ -85,6 +85,46 @@
         "targetLang",
         "date"
       ]
+    },
+    "feedback": {
+      "title": "Translation Feedback",
+      "description": "User-provided feedback on a translation.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user providing feedback."
+        },
+        "originalTranslationId": {
+          "type": "string",
+          "description": "The ID of the translation record being corrected."
+        },
+        "sourceText": {
+          "type": "string",
+          "description": "The original text provided by the user."
+        },
+        "originalTranslatedText": {
+          "type": "string",
+          "description": "The AI-generated translated text."
+        },
+        "userCorrectedText": {
+          "type": "string",
+          "description": "The correction provided by the user."
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the feedback was submitted."
+        }
+      },
+      "required": [
+        "userId",
+        "originalTranslationId",
+        "sourceText",
+        "originalTranslatedText",
+        "userCorrectedText",
+        "timestamp"
+      ]
     }
   },
   "auth": {
@@ -102,6 +142,12 @@
         "$ref": "#/entities/translation"
       },
       "description": "Stores a user's translation history."
+    },
+    "/feedback/{feedbackId}": {
+      "schema": {
+        "$ref": "#/entities/feedback"
+      },
+      "description": "Stores all user feedback on translations to improve the AI model."
     }
   }
 }
