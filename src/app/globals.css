@@ -88,3 +88,23 @@
     );
   }
 }
+
+@layer utilities {
+  .v-path {
+    stroke-dasharray: 28;
+    stroke-dashoffset: 28;
+    animation: draw-v 1.5s ease-in-out infinite;
+  }
+
+  @keyframes draw-v {
+    0% {
+      stroke-dashoffset: 28;
+    }
+    50% {
+      stroke-dashoffset: 0;
+    }
+    100% {
+      stroke-dashoffset: -28;
+    }
+  }
+}
