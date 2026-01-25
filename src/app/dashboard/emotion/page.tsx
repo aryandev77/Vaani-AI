@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { ArrowRight, LoaderCircle } from 'lucide-react';
 
 import { handleEmotion } from '@/lib/actions';
@@ -33,7 +33,7 @@ const languages = [
 
 export default function EmotionPage() {
   const initialState: EmotionState = { translatedText: '' };
-  const [state, dispatch] = useFormState(handleEmotion, initialState);
+  const [state, dispatch] = useActionState(handleEmotion, initialState);
 
   return (
     <div className="flex flex-col gap-8">

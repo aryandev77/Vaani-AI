@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import { BookOpen, LoaderCircle } from 'lucide-react';
 
 import { handleInsight } from '@/lib/actions';
@@ -12,7 +12,7 @@ import { SubmitButton } from '@/components/submit-button';
 
 export default function LearningPage() {
   const initialState: InsightState = { culturalSummary: '' };
-  const [state, dispatch] = useFormState(handleInsight, initialState);
+  const [state, dispatch] = useActionState(handleInsight, initialState);
 
   return (
     <div className="flex flex-col gap-8">

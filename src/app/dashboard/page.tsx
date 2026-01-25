@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState } from 'react-dom';
+import { useActionState } from 'react';
 import Image from 'next/image';
 import { ArrowRight, LoaderCircle, Volume2 } from 'lucide-react';
 
@@ -46,7 +46,7 @@ export default function TranslationPage() {
     translatedText: '',
     culturalInsights: '',
   };
-  const [state, dispatch] = useFormState(handleTranslation, initialState);
+  const [state, dispatch] = useActionState(handleTranslation, initialState);
 
   return (
     <div className="flex flex-col gap-8">
