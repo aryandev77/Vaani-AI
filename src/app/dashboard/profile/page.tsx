@@ -12,7 +12,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
-import { LoaderCircle, UserX } from 'lucide-react';
+import { KeyRound, LoaderCircle, UserX } from 'lucide-react';
 
 import { useAuth, useUser, useStorage } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,6 +24,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -47,12 +56,29 @@ export default function ProfilePage() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [secretCode, setSecretCode] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  // You can change the secret code for founder mode here
+  const ADMIN_SECRET_CODE = 'VIBGYOR7';
+
   useEffect(() => {
     if (user) {
       setDisplayName(user.displayName || '');
       setEmail(user.email || '');
     }
   }, [user]);
+
+  useEffect(() => {
+    // Check for admin status in localStorage when the component mounts
+    if (typeof window !== 'undefined') {
+      const adminStatus = localStorage.getItem('isAdmin');
+      if (adminStatus === 'true') {
+        setIsAdmin(true);
+      }
+    }
+  }, []);
 
   const handleProfileUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -133,6 +159,26 @@ export default function ProfilePage() {
         });
       }
     );
+  };
+
+  const handleAdminUnlock = () => {
+    if (secretCode === ADMIN_SECRET_CODE) {
+      localStorage.setItem('isAdmin', 'true');
+      setIsAdmin(true);
+      setIsDialogOpen(false);
+      toast({
+        title: 'Founder Features Unlocked!',
+        description:
+          'You now have access to special administrative features.',
+      });
+    } else {
+      toast({
+        variant: 'destructive',
+        title: 'Incorrect Secret Code',
+        description: 'The code you entered is not valid. Please try again.',
+      });
+    }
+    setSecretCode('');
   };
 
   if (user === undefined) {
@@ -269,6 +315,65 @@ export default function ProfilePage() {
                 <Button type="submit">Update Password</Button>
               </div>
             </form>
+          </div>
+          <Separator />
+          <div className="space-y-2">
+            <h3 className="text-lg font-medium">Founder Access</h3>
+            <p className="text-sm text-muted-foreground">
+              Unlock special administrative features for founders.
+            </p>
+            <div className="pt-4">
+              {isAdmin ? (
+                <div className="flex items-center gap-3 rounded-lg border border-green-800 bg-green-900/30 p-4">
+                  <KeyRound className="h-6 w-6 shrink-0 text-green-400" />
+                  <div>
+                    <h4 className="font-semibold text-green-300">
+                      Founder Mode Active
+                    </h4>
+                    <p className="text-sm text-muted-foreground">
+                      You can now see special features across the app.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <KeyRound className="mr-2 h-4 w-4" />
+                      Unlock Founder Features
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                      <DialogTitle>Founder Access</DialogTitle>
+                      <DialogDescription>
+                        Enter the secret code to unlock special features. This is
+                        for founders only.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="grid gap-4 py-4">
+                      <Label htmlFor="secret-code" className="sr-only">
+                        Secret Code
+                      </Label>
+                      <Input
+                        id="secret-code"
+                        type="password"
+                        value={secretCode}
+                        onChange={(e) => setSecretCode(e.target.value)}
+                        placeholder="Enter secret code..."
+                        autoComplete="one-time-code"
+                        onKeyDown={(e) => e.key === 'Enter' && handleAdminUnlock()}
+                      />
+                    </div>
+                    <DialogFooter>
+                      <Button onClick={handleAdminUnlock}>
+                        Unlock Features
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
