@@ -27,23 +27,34 @@ import {
 type GameType = 'match-columns' | 'translate-word';
 
 const words: { [key: string]: string }[] = [
-  { en: 'Hello', es: 'Hola', fr: 'Bonjour', de: 'Hallo' },
-  { en: 'Goodbye', es: 'Adiós', fr: 'Au revoir', de: 'Auf Wiedersehen' },
-  { en: 'Thank you', es: 'Gracias', fr: 'Merci', de: 'Danke' },
-  { en: 'Yes', es: 'Sí', fr: 'Oui', de: 'Ja' },
-  { en: 'No', es: 'No', fr: 'Non', de: 'Nein' },
-  { en: 'Cat', es: 'Gato', fr: 'Chat', de: 'Katze' },
-  { en: 'Dog', es: 'Perro', fr: 'Chien', de: 'Hund' },
-  { en: 'House', es: 'Casa', fr: 'Maison', de: 'Haus' },
-  { en: 'Water', es: 'Agua', fr: 'Eau', de: 'Wasser' },
-  { en: 'Sun', es: 'Sol', fr: 'Soleil', de: 'Sonne' },
+  { en: 'Hello', es: 'Hola', fr: 'Bonjour', de: 'Hallo', ja: 'こんにちは', zh: '你好', hi: 'नमस्ते', bn: 'হ্যালো', mr: 'नमस्कार', ta: 'வணக்கம்', te: 'నమస్కారం', bho: 'प्रणाम', ml: 'നമസ്കാരം', ur: 'ہیلو', pa: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ' },
+  { en: 'Goodbye', es: 'Adiós', fr: 'Au revoir', de: 'Auf Wiedersehen', ja: 'さようなら', zh: '再见', hi: 'अलविदा', bn: 'বিদায়', mr: 'अलविदा', ta: 'போய் வருகிறேன்', te: 'వీడ్కోలు', bho: 'बिदाई', ml: 'വിട', ur: 'الوداع', pa: 'ਅਲਵਿਦਾ' },
+  { en: 'Thank you', es: 'Gracias', fr: 'Merci', de: 'Danke', ja: 'ありがとう', zh: '谢谢', hi: 'धन्यवाद', bn: 'ধন্যবাদ', mr: 'धन्यवाद', ta: 'நன்றி', te: 'ధన్యవాదాలు', bho: 'धन्यवाद', ml: 'നന്ദി', ur: 'شکریہ', pa: 'ਧੰਨਵਾਦ' },
+  { en: 'Yes', es: 'Sí', fr: 'Oui', de: 'Ja', ja: 'はい', zh: '是', hi: 'हाँ', bn: 'হ্যাঁ', mr: 'हो', ta: 'ஆம்', te: 'అవును', bho: 'हाँ', ml: 'അതെ', ur: 'ہاں', pa: 'ਹਾਂ' },
+  { en: 'No', es: 'No', fr: 'Non', de: 'Nein', ja: 'いいえ', zh: '不是', hi: 'नहीं', bn: 'না', mr: 'नाही', ta: 'இல்லை', te: 'కాదు', bho: 'ना', ml: 'ഇല്ല', ur: 'نہیں', pa: 'ਨਹੀਂ' },
+  { en: 'Cat', es: 'Gato', fr: 'Chat', de: 'Katze', ja: '猫', zh: '猫', hi: 'बिल्ली', bn: 'বিড়াল', mr: 'मांजर', ta: 'பூனை', te: 'పిల్లి', bho: 'बिलार', ml: 'പൂച്ച', ur: 'بلی', pa: 'ਬਿੱਲੀ' },
+  { en: 'Dog', es: 'Perro', fr: 'Chien', de: 'Hund', ja: '犬', zh: '狗', hi: 'कुत्ता', bn: 'কুকুর', mr: 'कुत्रा', ta: 'நாய்', te: 'కుక్క', bho: 'कुकुर', ml: 'പട്ടി', ur: 'کتا', pa: 'ਕੁੱਤਾ' },
+  { en: 'House', es: 'Casa', fr: 'Maison', de: 'Haus', ja: '家', zh: '房子', hi: 'घर', bn: 'বাড়ি', mr: 'घर', ta: 'வீடு', te: 'ఇల్లు', bho: 'घर', ml: 'വീട്', ur: 'گھر', pa: 'ਘਰ' },
+  { en: 'Water', es: 'Agua', fr: 'Eau', de: 'Wasser', ja: '水', zh: '水', hi: 'पानी', bn: 'জল', mr: 'पाणी', ta: 'தண்ணீர்', te: 'నీరు', bho: 'पानी', ml: 'വെള്ളം', ur: 'پانی', pa: 'ਪਾਣੀ' },
+  { en: 'Sun', es: 'Sol', fr: 'Soleil', de: 'Sonne', ja: '太陽', zh: '太阳', hi: 'सूरज', bn: 'সূর্য', mr: 'सूर्य', ta: 'சூரியன்', te: 'సూర్యుడు', bho: 'सुरुज', ml: 'സൂര്യൻ', ur: 'سورج', pa: 'ਸੂਰਜ' },
 ];
 
 const gameLanguages = [
-  { value: 'en', label: 'English' },
-  { value: 'es', label: 'Spanish' },
-  { value: 'fr', label: 'French' },
-  { value: 'de', label: 'German' },
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Spanish' },
+    { value: 'fr', label: 'French' },
+    { value: 'de', label: 'German' },
+    { value: 'ja', label: 'Japanese' },
+    { value: 'zh', label: 'Chinese' },
+    { value: 'hi', label: 'Hindi' },
+    { value: 'bn', label: 'Bengali' },
+    { value: 'mr', label: 'Marathi' },
+    { value: 'ta', label: 'Tamil' },
+    { value: 'te', label: 'Telugu' },
+    { value: 'bho', label: 'Bhojpuri' },
+    { value: 'ml', label: 'Malayalam' },
+    { value: 'ur', label: 'Urdu' },
+    { value: 'pa', label: 'Punjabi' },
 ];
 
 const SOUNDS = {
@@ -393,6 +404,11 @@ export default function GamePage() {
     }
   }, [sourceLang, targetLang]);
 
+  useEffect(() => {
+    setGameData(getGameData(level, sourceLang, targetLang));
+  }, [sourceLang, targetLang, level]);
+
+
   const startGame = (type: GameType) => {
     playStart();
     setGameType(type);
@@ -401,21 +417,22 @@ export default function GamePage() {
   };
 
   const handleGameEnd = (finalScore: number) => {
-    setScore(finalScore);
-    setGameState('score');
+    if (gameState === 'playing') {
+      setScore(finalScore);
+      setGameState('score');
+    }
   };
 
   const handleNextLevel = () => {
     playStart();
     const nextLevel = level + 1;
     setLevel(nextLevel);
-    setGameData(getGameData(nextLevel, sourceLang, targetLang));
     setGameState('playing');
   };
 
   const handleRestart = () => {
     playStart();
-    setGameData(getGameData(level, sourceLang, targetLang));
+    setScore(0);
     setGameState('playing');
   };
 
@@ -423,6 +440,8 @@ export default function GamePage() {
     playClick();
     setGameState('menu');
     setGameType(null);
+    setLevel(1);
+    setScore(0);
   };
 
   return (
