@@ -51,7 +51,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-secondary">
+    <div className="flex min-h-screen items-center justify-center">
       <Card className="mx-auto w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">

@@ -39,11 +39,11 @@
     --sidebar-ring: 25 95% 53%;
   }
   .dark {
-    --background: 222.2 84% 4.9%;
+    --background: 240 10% 3.9%;
     --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
+    --card: 240 10% 3.9%;
     --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
+    --popover: 240 10% 3.9%;
     --popover-foreground: 210 40% 98%;
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
@@ -80,5 +80,10 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image: linear-gradient(
+      to bottom,
+      hsl(var(--background)),
+      hsl(var(--secondary))
+    );
   }
 }
