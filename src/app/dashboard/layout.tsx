@@ -10,6 +10,7 @@ import {
   Info,
   Languages,
   Smile,
+  Swords,
 } from 'lucide-react';
 
 import {
@@ -49,6 +50,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard/profile': 'Profile Settings',
       '/dashboard/billing': 'Billing',
       '/dashboard/settings': 'Settings',
+      '/dashboard/game': 'Language Games',
     };
     return pageTitles[pathname] || 'Dashboard';
   }, [pathname]);
@@ -114,6 +116,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/emotion">
                     <Smile />
                     <span>Emotion Tool</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Games',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  isActive={pathname === '/dashboard/game'}
+                >
+                  <Link href="/dashboard/game">
+                    <Swords />
+                    <span>Games</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
