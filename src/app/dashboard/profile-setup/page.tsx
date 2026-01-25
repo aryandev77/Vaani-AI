@@ -78,27 +78,40 @@ export default function ProfileSetupPage() {
   useEffect(() => {
     if (user && firestore) {
       const fetchProfile = async () => {
-        const docRef = doc(firestore, 'users', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const data = docSnap.data();
-          form.reset({
-            name: data.name || user.displayName || '',
-            gender: data.gender || '',
-            dob: data.dob ? (data.dob as Timestamp).toDate() : undefined,
-            nationality: data.nationality || '',
-            spokenLanguages: data.spokenLanguages || '',
-            culturalPreferences: data.culturalPreferences || '',
-          });
-        } else {
+        try {
+          const docRef = doc(firestore, 'users', user.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            form.reset({
+              name: data.name || user.displayName || '',
+              gender: data.gender || '',
+              dob: data.dob ? (data.dob as Timestamp).toDate() : undefined,
+              nationality: data.nationality || '',
+              spokenLanguages: data.spokenLanguages || '',
+              culturalPreferences: data.culturalPreferences || '',
+            });
+          } else {
             form.reset({ name: user.displayName || '' });
+          }
+        } catch (error: any) {
+          console.error('Error fetching profile:', error);
+          toast({
+            variant: 'destructive',
+            title: 'Failed to load profile',
+            description:
+              'Could not connect to the database. Please ensure Firestore is enabled in your Firebase project and that you are online.',
+          });
+        } finally {
+          setIsLoading(false);
         }
-        setIsLoading(false);
       };
       fetchProfile();
+    } else if (user === null) {
+      // If user is logged out, stop showing the loading state.
+      setIsLoading(false);
     }
-  }, [user, firestore, form]);
-
+  }, [user, firestore, form, toast]);
 
   const onSubmit = async (data: ProfileSetupFormValues) => {
     if (!user || !firestore) {
@@ -112,7 +125,11 @@ export default function ProfileSetupPage() {
 
     try {
       const userDocRef = doc(firestore, 'users', user.uid);
-      await setDoc(userDocRef, { ...data, profileComplete: true }, { merge: true });
+      await setDoc(
+        userDocRef,
+        { ...data, profileComplete: true },
+        { merge: true }
+      );
       toast({
         title: 'Profile Updated!',
         description: 'Your detailed profile has been saved.',
@@ -144,11 +161,12 @@ export default function ProfileSetupPage() {
           <CardHeader>
             <CardTitle>Set Up Your Detailed Profile</CardTitle>
             <CardDescription>
-              This information helps us provide you with more accurate and culturally aware translations.
+              This information helps us provide you with more accurate and
+              culturally aware translations.
             </CardDescription>
           </CardHeader>
         </Card>
-        
+
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
@@ -168,70 +186,72 @@ export default function ProfileSetupPage() {
               )}
             />
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <FormField
+              <FormField
                 control={form.control}
                 name="gender"
                 render={({ field }) => (
-                    <FormItem>
+                  <FormItem>
                     <FormLabel>Gender</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
+                      <FormControl>
                         <SelectTrigger>
-                            <SelectValue placeholder="Select your gender" />
+                          <SelectValue placeholder="Select your gender" />
                         </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
+                      </FormControl>
+                      <SelectContent>
                         <SelectItem value="male">Male</SelectItem>
                         <SelectItem value="female">Female</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
-                        <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-                        </SelectContent>
+                        <SelectItem value="prefer-not-to-say">
+                          Prefer not to say
+                        </SelectItem>
+                      </SelectContent>
                     </Select>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
-                <FormField
+              />
+              <FormField
                 control={form.control}
                 name="dob"
                 render={({ field }) => (
-                    <FormItem className="flex flex-col pt-2">
+                  <FormItem className="flex flex-col pt-2">
                     <FormLabel>Date of birth</FormLabel>
                     <Popover>
-                        <PopoverTrigger asChild>
+                      <PopoverTrigger asChild>
                         <FormControl>
-                            <Button
+                          <Button
                             variant={'outline'}
                             className={cn(
-                                'w-full pl-3 text-left font-normal',
-                                !field.value && 'text-muted-foreground'
+                              'w-full pl-3 text-left font-normal',
+                              !field.value && 'text-muted-foreground'
                             )}
-                            >
+                          >
                             {field.value ? (
-                                format(field.value, 'PPP')
+                              format(field.value, 'PPP')
                             ) : (
-                                <span>Pick a date</span>
+                              <span>Pick a date</span>
                             )}
                             <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
+                          </Button>
                         </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
                         <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) =>
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          disabled={date =>
                             date > new Date() || date < new Date('1900-01-01')
-                            }
-                            initialFocus
+                          }
+                          initialFocus
                         />
-                        </PopoverContent>
+                      </PopoverContent>
                     </Popover>
                     <FormMessage />
-                    </FormItem>
+                  </FormItem>
                 )}
-                />
+              />
             </div>
           </CardContent>
         </Card>
@@ -241,66 +261,68 @@ export default function ProfileSetupPage() {
             <CardTitle>Cultural & Language Profile</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-             <FormField
-                control={form.control}
-                name="nationality"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Nationality</FormLabel>
-                    <FormControl>
-                        <Input placeholder="e.g., American, Indian" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
+            <FormField
+              control={form.control}
+              name="nationality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nationality</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., American, Indian" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-             <FormField
-                control={form.control}
-                name="spokenLanguages"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Spoken Languages</FormLabel>
-                     <FormControl>
-                        <Textarea
-                            placeholder="e.g., English, Spanish, Hindi"
-                            {...field}
-                        />
-                    </FormControl>
-                    <FormDescription>
-                        List the languages you speak, separated by commas.
-                    </FormDescription>
-                    <FormMessage />
-                    </FormItem>
-                )}
+            <FormField
+              control={form.control}
+              name="spokenLanguages"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Spoken Languages</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="e.g., English, Spanish, Hindi"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    List the languages you speak, separated by commas.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-             <FormField
-                control={form.control}
-                name="culturalPreferences"
-                render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Cultural Preferences & Notes</FormLabel>
-                     <FormControl>
-                        <Textarea
-                            placeholder="Any cultural nuances, preferences, or context you'd like the AI to be aware of? (e.g., 'I prefer formal address', 'I often use British slang')"
-                             className="min-h-[100px]"
-                            {...field}
-                        />
-                    </FormControl>
-                     <FormDescription>
-                        This helps the AI tailor its responses to you.
-                    </FormDescription>
-                    <FormMessage />
-                    </FormItem>
-                )}
+            <FormField
+              control={form.control}
+              name="culturalPreferences"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cultural Preferences & Notes</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Any cultural nuances, preferences, or context you'd like the AI to be aware of? (e.g., 'I prefer formal address', 'I often use British slang')"
+                      className="min-h-[100px]"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    This helps the AI tailor its responses to you.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
           </CardContent>
         </Card>
-        
+
         <div className="flex justify-end">
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting && <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />}
-                Save Profile
-            </Button>
+          <Button type="submit" disabled={form.formState.isSubmitting}>
+            {form.formState.isSubmitting && (
+              <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            Save Profile
+          </Button>
         </div>
       </form>
     </Form>
