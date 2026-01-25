@@ -50,11 +50,6 @@ export default function TranslationPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center">
-        <h1 className="text-2xl font-semibold font-headline md:text-3xl">
-          Real-Time Translation
-        </h1>
-      </div>
       <form action={dispatch}>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="grid gap-4 lg:col-span-2">

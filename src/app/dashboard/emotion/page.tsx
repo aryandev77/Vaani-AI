@@ -37,11 +37,6 @@ export default function EmotionPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex items-center">
-        <h1 className="text-2xl font-semibold font-headline md:text-3xl">
-          Emotion & Tone Preservation
-        </h1>
-      </div>
       <form action={dispatch}>
         <div className="grid gap-8 md:grid-cols-2">
           <Card>

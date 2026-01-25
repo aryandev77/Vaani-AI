@@ -2,8 +2,8 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useMemo } from 'react';
 import {
   Book,
   History,
@@ -31,12 +31,27 @@ import { useUser } from '@/firebase';
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const user = useUser();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (user === null) {
       router.push('/');
     }
   }, [user, router]);
+
+  const pageTitle = useMemo(() => {
+    const pageTitles: { [key: string]: string } = {
+      '/dashboard': 'Real-Time Translation',
+      '/dashboard/learning': 'Learning Mode',
+      '/dashboard/emotion': 'Emotion & Tone Preservation',
+      '/dashboard/history': 'Conversation History',
+      '/dashboard/about': 'About Vaani AI',
+      '/dashboard/profile': 'Profile Settings',
+      '/dashboard/billing': 'Billing',
+      '/dashboard/settings': 'Settings',
+    };
+    return pageTitles[pathname] || 'Dashboard';
+  }, [pathname]);
 
   if (user === undefined) {
     return (
@@ -68,6 +83,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Translate',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  isActive={pathname === '/dashboard'}
                 >
                   <Link href="/dashboard">
                     <Languages />
@@ -82,6 +98,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Learning Mode',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  isActive={pathname === '/dashboard/learning'}
                 >
                   <Link href="/dashboard/learning">
                     <Book />
@@ -96,6 +113,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Emotion Tool',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  isActive={pathname === '/dashboard/emotion'}
                 >
                   <Link href="/dashboard/emotion">
                     <Smile />
@@ -110,6 +128,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'History',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  isActive={pathname === '/dashboard/history'}
                 >
                   <Link href="/dashboard/history">
                     <History />
@@ -124,6 +143,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'About',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  isActive={pathname === '/dashboard/about'}
                 >
                   <Link href="/dashboard/about">
                     <Info />
@@ -139,7 +159,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
               <SidebarTrigger className="md:hidden" />
               <div className="flex-1">
-                {/* Page titles will be rendered by each page */}
+                <h1 className="text-xl font-semibold font-headline">
+                  {pageTitle}
+                </h1>
               </div>
               <UserNav />
             </header>
