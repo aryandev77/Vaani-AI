@@ -29,6 +29,11 @@ const languages = [
   { value: 'french', label: 'French' },
   { value: 'german', label: 'German' },
   { value: 'japanese', label: 'Japanese' },
+  { value: 'hindi', label: 'Hindi' },
+  { value: 'bengali', label: 'Bengali' },
+  { value: 'marathi', label: 'Marathi' },
+  { value: 'tamil', label: 'Tamil' },
+  { value: 'telugu', label: 'Telugu' },
 ];
 
 export default function EmotionPage() {
@@ -44,7 +49,7 @@ export default function EmotionPage() {
               <CardTitle>Original Text</CardTitle>
               <CardDescription>
                 Enter text and select a target language. The AI will preserve the emotion.
-              </CardDescription>
+              </-cardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid w-full gap-2">

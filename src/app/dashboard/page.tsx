@@ -37,6 +37,10 @@ const languages = [
   { value: 'japanese', label: 'Japanese' },
   { value: 'chinese', label: 'Chinese' },
   { value: 'hindi', label: 'Hindi' },
+  { value: 'bengali', label: 'Bengali' },
+  { value: 'marathi', label: 'Marathi' },
+  { value: 'tamil', label: 'Tamil' },
+  { value: 'telugu', label: 'Telugu' },
 ];
 
 const lipSyncAvatar = getPlaceholderImage('lip-sync-avatar');
