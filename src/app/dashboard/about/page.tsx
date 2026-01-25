@@ -9,7 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 
 export default function AboutPage() {
-  const founderAvatar = getPlaceholderImage('user-avatar');
+  const founderAvatar = getPlaceholderImage('founder-avatar');
 
   return (
     <div className="flex flex-col gap-8">
