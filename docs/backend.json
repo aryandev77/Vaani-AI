@@ -13,6 +13,32 @@
           "type": "string",
           "format": "email",
           "description": "The user's email address."
+        },
+        "gender": {
+          "type": "string",
+          "description": "The user's gender.",
+          "enum": ["male", "female", "other", "prefer-not-to-say"]
+        },
+        "dob": {
+            "type": "string",
+            "format": "date",
+            "description": "The user's date of birth."
+        },
+        "nationality": {
+            "type": "string",
+            "description": "The user's nationality."
+        },
+        "spokenLanguages": {
+            "type": "string",
+            "description": "Languages spoken by the user, comma-separated."
+        },
+        "culturalPreferences": {
+            "type": "string",
+            "description": "User's cultural preferences and notes for better AI interaction."
+        },
+        "profileComplete": {
+            "type": "boolean",
+            "description": "Whether the user has completed their detailed profile setup."
         }
       },
       "required": ["name", "email"]

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import {
   EmailAuthProvider,
   reauthenticateWithCredential,
@@ -28,6 +29,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -379,6 +381,30 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Detailed Profile</CardTitle>
+          <CardDescription>
+            Enhance your translation experience by providing more details about
+            your linguistic and cultural background.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            This information helps Vaani AI provide more accurate and culturally
+            relevant translations and insights tailored specifically to you.
+          </p>
+        </CardContent>
+        <CardFooter>
+          <Button asChild>
+            <Link href="/dashboard/profile-setup">
+              Set Up Detailed Profile
+            </Link>
+          </Button>
+        </CardFooter>
+      </Card>
+
       {isAdmin && (
         <Card>
           <CardHeader>
