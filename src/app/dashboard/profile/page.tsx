@@ -15,7 +15,6 @@ import {
 } from 'firebase/storage';
 import {
   KeyRound,
-  LoaderCircle,
   UserX,
   Users,
   Languages,
@@ -48,6 +47,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
+import { LoadingIndicator } from '@/components/loading-indicator';
 
 export default function ProfilePage() {
   const user = useUser();
@@ -193,7 +193,7 @@ export default function ProfilePage() {
   if (user === undefined) {
     return (
       <div className="flex h-[400px] w-full items-center justify-center">
-        <LoaderCircle className="h-8 w-8 animate-spin" />
+        <LoadingIndicator />
       </div>
     );
   }

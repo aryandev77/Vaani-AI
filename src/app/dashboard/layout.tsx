@@ -9,7 +9,6 @@ import {
   History,
   Info,
   Languages,
-  LoaderCircle,
   Smile,
 } from 'lucide-react';
 
@@ -27,6 +26,7 @@ import {
 import { UserNav } from '@/components/user-nav';
 import { Logo } from '@/components/logo';
 import { useUser } from '@/firebase';
+import { FullScreenLoader } from '@/components/full-screen-loader';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const user = useUser();
@@ -54,11 +54,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   if (user === undefined) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <LoaderCircle className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (user === null) {

@@ -4,7 +4,6 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useAuth, useUser } from '@/firebase';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { FullScreenLoader } from '@/components/full-screen-loader';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -69,19 +69,11 @@ export default function LoginPage() {
   };
 
   if (user === undefined) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <LoaderCircle className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   if (user) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <LoaderCircle className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <FullScreenLoader />;
   }
 
   return (
