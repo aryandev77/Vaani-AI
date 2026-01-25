@@ -1,4 +1,3 @@
-import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 export function Logo({ className }: { className?: string }) {
@@ -9,7 +8,29 @@ export function Logo({ className }: { className?: string }) {
         className
       )}
     >
-      <Image src="/logo.svg" alt="Vaani AI" width={28} height={28} />
+      <svg
+        width="28"
+        height="28"
+        viewBox="0 0 28 28"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.7} />
+            <stop offset="100%" stopColor="hsl(var(--primary))" />
+          </linearGradient>
+        </defs>
+        <rect width="28" height="28" rx="6" fill="url(#logoGradient)" />
+        <path
+          d="M6 9 L14 20 L22 9"
+          stroke="hsl(var(--primary-foreground))"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </svg>
       <span className="font-headline">Vaani AI</span>
     </div>
   );
