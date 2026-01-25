@@ -2,7 +2,9 @@
 
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Book, History, Languages, Smile } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Book, History, Languages, Smile, LoaderCircle } from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -17,13 +19,30 @@ import {
 } from '@/components/ui/sidebar';
 import { UserNav } from '@/components/user-nav';
 import { Logo } from '@/components/logo';
-
-// NOTE: The authentication guard has been temporarily removed from this layout
-// to allow for easier UI previewing. You will be able to see the dashboard,
-// but features requiring a user (like profile editing) will be disabled until
-// you provide your Firebase credentials in the .env file and sign in.
+import { useUser } from '@/firebase';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
+  const user = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user === null) {
+      router.push('/');
+    }
+  }, [user, router]);
+
+  if (user === undefined) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoaderCircle className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (user === null) {
+    return null; // or a redirect component
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background">

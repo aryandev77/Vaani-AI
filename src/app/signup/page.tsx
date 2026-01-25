@@ -1,10 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { Terminal } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -19,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useAuth } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -28,16 +26,6 @@ export default function SignupPage() {
   const router = useRouter();
   const auth = useAuth();
   const { toast } = useToast();
-  const [isConfigMissing, setIsConfigMissing] = useState(false);
-
-  useEffect(() => {
-    if (
-      !process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
-      process.env.NEXT_PUBLIC_FIREBASE_API_KEY === 'YOUR_API_KEY'
-    ) {
-      setIsConfigMissing(true);
-    }
-  }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,17 +65,6 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {isConfigMissing && (
-            <Alert variant="destructive" className="mb-4">
-              <Terminal className="h-4 w-4" />
-              <AlertTitle>Configuration Error</AlertTitle>
-              <AlertDescription>
-                Your Firebase configuration is missing. Please add your
-                credentials to the <code>.env</code> file and restart the
-                server.
-              </AlertDescription>
-            </Alert>
-          )}
           <form onSubmit={handleSignUp}>
             <div className="grid gap-4">
               <div className="grid gap-2">
@@ -121,7 +98,7 @@ export default function SignupPage() {
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isConfigMissing}>
+              <Button type="submit" className="w-full">
                 Create an account
               </Button>
             </div>
