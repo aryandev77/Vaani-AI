@@ -17,19 +17,25 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useAuth } from '@/firebase';
-import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const auth = useAuth();
-  const { toast } = useToast();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!auth) return;
+    setError(null);
+    if (!auth) {
+      setError(
+        'Authentication service is not available. Please try again later.'
+      );
+      return;
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -42,16 +48,29 @@ export default function SignupPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Sign-up failed',
-        description: error.message,
-      });
+      let errorMessage = 'An unexpected error occurred.';
+      switch (error.code) {
+        case 'auth/email-already-in-use':
+          errorMessage = 'This email address is already in use.';
+          break;
+        case 'auth/invalid-email':
+          errorMessage = 'Please enter a valid email address.';
+          break;
+        case 'auth/weak-password':
+          errorMessage =
+            'The password is too weak. Please choose a stronger password.';
+          break;
+        default:
+          errorMessage =
+            'Sign-up failed. Please check your details and try again.';
+          break;
+      }
+      setError(errorMessage);
     }
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="mx-auto w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
@@ -65,6 +84,11 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {error && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           <form onSubmit={handleSignUp}>
             <div className="grid gap-4">
               <div className="grid gap-2">
