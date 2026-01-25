@@ -18,7 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
 import { useAuth, useUser } from '@/firebase';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function SignupPage() {
   const [fullName, setFullName] = useState('');
@@ -87,11 +87,15 @@ export default function SignupPage() {
   }
 
   if (user) {
-    return null;
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoaderCircle className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background p-4">
       <Card className="mx-auto w-full max-w-sm">
         <CardHeader className="text-center">
           <div className="mb-4 flex justify-center">
@@ -107,6 +111,7 @@ export default function SignupPage() {
         <CardContent>
           {error && (
             <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Sign-up Failed</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
@@ -156,6 +161,9 @@ export default function SignupPage() {
           </div>
         </CardContent>
       </Card>
+      <p className="mt-6 text-center text-sm text-muted-foreground">
+        Made with 🧡
+      </p>
     </div>
   );
 }

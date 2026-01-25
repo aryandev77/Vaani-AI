@@ -4,7 +4,14 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Book, History, Languages, Smile, LoaderCircle } from 'lucide-react';
+import {
+  Book,
+  History,
+  Info,
+  Languages,
+  LoaderCircle,
+  Smile,
+} from 'lucide-react';
 
 import {
   SidebarProvider,
@@ -107,6 +114,20 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/history">
                     <History />
                     <span>History</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'About',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                >
+                  <Link href="/dashboard/about">
+                    <Info />
+                    <span>About</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
