@@ -42,6 +42,49 @@
         }
       },
       "required": ["name", "email"]
+    },
+    "translation": {
+      "title": "Translation Record",
+      "description": "A record of a single translation event.",
+      "type": "object",
+      "properties": {
+        "sourceText": {
+          "type": "string",
+          "description": "The original text provided by the user."
+        },
+        "translatedText": {
+          "type": "string",
+          "description": "The resulting translated text."
+        },
+        "sourceLang": {
+          "type": "string",
+          "description": "The source language of the translation."
+        },
+        "targetLang": {
+          "type": "string",
+          "description": "The target language for the translation."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the translation occurred."
+        },
+        "culturalContext": {
+          "type": "string",
+          "description": "The cultural context provided for the translation."
+        },
+        "culturalInsights": {
+          "type": "string",
+          "description": "AI-generated cultural insights for the translation."
+        }
+      },
+      "required": [
+        "sourceText",
+        "translatedText",
+        "sourceLang",
+        "targetLang",
+        "date"
+      ]
     }
   },
   "auth": {
@@ -53,6 +96,12 @@
         "$ref": "#/entities/user"
       },
       "description": "Stores public information about a user."
+    },
+    "/users/{userId}/translations/{translationId}": {
+      "schema": {
+        "$ref": "#/entities/translation"
+      },
+      "description": "Stores a user's translation history."
     }
   }
 }

@@ -2,6 +2,10 @@ export type TranslationState = {
   translatedText: string;
   culturalInsights?: string;
   audioData?: string;
+  sourceText?: string;
+  sourceLang?: string;
+  targetLang?: string;
+  culturalContext?: string;
 };
 
 export type InsightState = {

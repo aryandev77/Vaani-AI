@@ -37,6 +37,10 @@ export async function handleTranslation(
       translatedText: translationResult.translatedText,
       culturalInsights: translationResult.culturalInsights,
       audioData: audioData,
+      sourceText: text,
+      sourceLang: sourceLanguage,
+      targetLang: targetLanguage,
+      culturalContext: culturalContext,
     };
   } catch (error) {
     console.error(error);
