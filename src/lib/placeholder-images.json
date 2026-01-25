@@ -7,12 +7,6 @@
       "imageHint": "user avatar"
     },
     {
-      "id": "founder-avatar",
-      "description": "Founder avatar for About page",
-      "imageUrl": "https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxtYWxlJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzA4NTk1NTM0fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "founder portrait"
-    },
-    {
       "id": "lip-sync-avatar",
       "description": "Avatar for lip sync visualization",
       "imageUrl": "https://images.unsplash.com/photo-1592621385612-4d7129426394?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzY5MTk3NzY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
