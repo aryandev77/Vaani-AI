@@ -15,20 +15,35 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import Confetti from 'react-confetti';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type GameType = 'match-columns' | 'translate-word';
 
-const words = [
-  { en: 'Hello', es: 'Hola' },
-  { en: 'Goodbye', es: 'Adiós' },
-  { en: 'Thank you', es: 'Gracias' },
-  { en: 'Yes', es: 'Sí' },
-  { en: 'No', es: 'No' },
-  { en: 'Cat', es: 'Gato' },
-  { en: 'Dog', es: 'Perro' },
-  { en: 'House', es: 'Casa' },
-  { en: 'Water', es: 'Agua' },
-  { en: 'Sun', es: 'Sol' },
+const words: { [key: string]: string }[] = [
+  { en: 'Hello', es: 'Hola', fr: 'Bonjour', de: 'Hallo' },
+  { en: 'Goodbye', es: 'Adiós', fr: 'Au revoir', de: 'Auf Wiedersehen' },
+  { en: 'Thank you', es: 'Gracias', fr: 'Merci', de: 'Danke' },
+  { en: 'Yes', es: 'Sí', fr: 'Oui', de: 'Ja' },
+  { en: 'No', es: 'No', fr: 'Non', de: 'Nein' },
+  { en: 'Cat', es: 'Gato', fr: 'Chat', de: 'Katze' },
+  { en: 'Dog', es: 'Perro', fr: 'Chien', de: 'Hund' },
+  { en: 'House', es: 'Casa', fr: 'Maison', de: 'Haus' },
+  { en: 'Water', es: 'Agua', fr: 'Eau', de: 'Wasser' },
+  { en: 'Sun', es: 'Sol', fr: 'Soleil', de: 'Sonne' },
+];
+
+const gameLanguages = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'fr', label: 'French' },
+  { value: 'de', label: 'German' },
 ];
 
 const SOUNDS = {
@@ -43,25 +58,29 @@ const shuffleArray = <T,>(array: T[]): T[] => {
   return array.sort(() => Math.random() - 0.5);
 };
 
-const getGameData = (level: number) => {
+const getGameData = (
+  level: number,
+  sourceLang: string,
+  targetLang: string
+) => {
   const shuffledWords = shuffleArray(words);
   const gameWords = shuffledWords.slice(0, 5);
 
   const mcqOptions = gameWords.map(word => {
     const wrongAnswers = shuffledWords
-      .filter(w => w.en !== word.en)
+      .filter(w => w[sourceLang] !== word[sourceLang])
       .slice(0, 3)
-      .map(w => w.es);
-    const options = shuffleArray([word.es, ...wrongAnswers]);
-    return { question: word.en, options, answer: word.es };
+      .map(w => w[targetLang]);
+    const options = shuffleArray([word[targetLang], ...wrongAnswers]);
+    return { question: word[sourceLang], options, answer: word[targetLang] };
   });
 
   return {
     matchColumns: {
-      left: shuffleArray(gameWords.map(w => w.en)),
-      right: shuffleArray(gameWords.map(w => w.es)),
+      left: shuffleArray(gameWords.map(w => w[sourceLang])),
+      right: shuffleArray(gameWords.map(w => w[targetLang])),
       mapping: gameWords.reduce(
-        (acc, w) => ({ ...acc, [w.en]: w.es }),
+        (acc, w) => ({ ...acc, [w[sourceLang]]: w[targetLang] }),
         {} as Record<string, string>
       ),
     },
@@ -109,10 +128,10 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
   const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
 
   useEffect(() => {
-    if (Object.keys(correctPairs).length === 5) {
+    if (Object.keys(correctPairs).length === gameData.left.length) {
       onGameEnd(score);
     }
-  }, [correctPairs, score, onGameEnd]);
+  }, [correctPairs, score, onGameEnd, gameData.left.length]);
 
   const handleSelect = (side: 'left' | 'right', value: string) => {
     playClick();
@@ -359,15 +378,26 @@ export default function GamePage() {
   const [gameType, setGameType] = useState<GameType | null>(null);
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
-  const [gameData, setGameData] = useState(getGameData(level));
+  const [sourceLang, setSourceLang] = useState('en');
+  const [targetLang, setTargetLang] = useState('es');
+  const [gameData, setGameData] = useState(getGameData(level, sourceLang, targetLang));
   const [playStart] = useSound(SOUNDS.start);
   const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
+  
+  useEffect(() => {
+    if (sourceLang === targetLang) {
+      const newTarget = gameLanguages.find(l => l.value !== sourceLang)?.value;
+      if (newTarget) {
+        setTargetLang(newTarget);
+      }
+    }
+  }, [sourceLang, targetLang]);
 
   const startGame = (type: GameType) => {
     playStart();
     setGameType(type);
     setGameState('playing');
-    setGameData(getGameData(level));
+    setGameData(getGameData(level, sourceLang, targetLang));
   };
 
   const handleGameEnd = (finalScore: number) => {
@@ -379,13 +409,13 @@ export default function GamePage() {
     playStart();
     const nextLevel = level + 1;
     setLevel(nextLevel);
-    setGameData(getGameData(nextLevel));
+    setGameData(getGameData(nextLevel, sourceLang, targetLang));
     setGameState('playing');
   };
 
   const handleRestart = () => {
     playStart();
-    setGameData(getGameData(level));
+    setGameData(getGameData(level, sourceLang, targetLang));
     setGameState('playing');
   };
 
@@ -406,9 +436,49 @@ export default function GamePage() {
             exit={{ opacity: 0 }}
             className="grid w-full max-w-2xl grid-cols-1 gap-8 md:grid-cols-2"
           >
+            <div className="col-span-1 md:col-span-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Language Settings</CardTitle>
+                        <CardDescription>Choose your languages for the games.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                        <div>
+                            <Label htmlFor="source-language">From</Label>
+                            <Select value={sourceLang} onValueChange={setSourceLang}>
+                                <SelectTrigger id="source-language">
+                                    <SelectValue placeholder="Select language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {gameLanguages.map(lang => (
+                                        <SelectItem key={lang.value} value={lang.value} disabled={lang.value === targetLang}>
+                                            {lang.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label htmlFor="target-language">To</Label>
+                            <Select value={targetLang} onValueChange={setTargetLang}>
+                                <SelectTrigger id="target-language">
+                                    <SelectValue placeholder="Select language" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {gameLanguages.map(lang => (
+                                        <SelectItem key={lang.value} value={lang.value} disabled={lang.value === sourceLang}>
+                                            {lang.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
             <GameCard
               title="Match the Columns"
-              description="Match English words to their Spanish translations."
+              description="Match words to their translations."
               icon={<Columns className="h-10 w-10 text-primary" />}
               onStart={() => startGame('match-columns')}
             />
