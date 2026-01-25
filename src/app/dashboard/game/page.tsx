@@ -108,6 +108,12 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
   const [playIncorrect] = useSound(SOUNDS.incorrect);
   const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
 
+  useEffect(() => {
+    if (Object.keys(correctPairs).length === 5) {
+      onGameEnd(score);
+    }
+  }, [correctPairs, score, onGameEnd]);
+
   const handleSelect = (side: 'left' | 'right', value: string) => {
     playClick();
     if (side === 'left') setSelectedLeft(value);
@@ -149,10 +155,6 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
     if (side === 'left') return !!incorrectPairs[value];
     return Object.values(incorrectPairs).includes(value);
   };
-
-  if (Object.keys(correctPairs).length === 5) {
-    onGameEnd(score);
-  }
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
