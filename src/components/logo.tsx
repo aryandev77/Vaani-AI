@@ -1,4 +1,4 @@
-import { BotMessageSquare } from 'lucide-react';
+import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
 export function Logo({ className }: { className?: string }) {
@@ -9,7 +9,7 @@ export function Logo({ className }: { className?: string }) {
         className
       )}
     >
-      <BotMessageSquare className="h-6 w-6" />
+      <Image src="/logo.svg" alt="Vaani AI" width={28} height={28} />
       <span className="font-headline">Vaani AI</span>
     </div>
   );
