@@ -14,7 +14,7 @@ import { useUser } from '@/firebase';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AboutPage() {
-  const defaultFounderAvatar = getPlaceholderImage('user-avatar');
+  const founderAvatar = getPlaceholderImage('founder-avatar');
   const user = useUser();
   const [isFounder, setIsFounder] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -32,9 +32,7 @@ export default function AboutPage() {
   const founderName =
     isFounder && user?.displayName ? user.displayName : 'Aryan Pal';
   const founderAvatarUrl =
-    isFounder && user?.photoURL
-      ? user.photoURL
-      : defaultFounderAvatar?.imageUrl;
+    isFounder && user?.photoURL ? user.photoURL : founderAvatar?.imageUrl;
   const founderAvatarFallback =
     (isFounder && user?.displayName
       ? user.displayName[0]
