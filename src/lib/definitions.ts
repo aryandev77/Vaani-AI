@@ -1,6 +1,7 @@
 export type TranslationState = {
   translatedText: string;
   culturalInsights?: string;
+  audioData?: string;
 };
 
 export type InsightState = {

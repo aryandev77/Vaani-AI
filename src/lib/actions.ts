@@ -8,6 +8,7 @@ import type {
 import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
 import { summarizeCulturalInsights } from '@/ai/flows/summarize-cultural-insights';
 import { detectAndPreserveEmotion } from '@/ai/flows/detect-and-preserve-emotion';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
 
 export async function handleTranslation(
   prevState: TranslationState,
@@ -19,21 +20,30 @@ export async function handleTranslation(
   const culturalContext = formData.get('culturalContext') as string | undefined;
 
   try {
-    const result = await realTimeTranslationWithContext({
+    const translationResult = await realTimeTranslationWithContext({
       text,
       sourceLanguage,
       targetLanguage,
       culturalContext,
     });
+
+    let audioData = '';
+    if (translationResult.translatedText) {
+       const ttsResult = await textToSpeech(translationResult.translatedText);
+       audioData = ttsResult.audioData;
+    }
+
     return {
-      translatedText: result.translatedText,
-      culturalInsights: result.culturalInsights,
+      translatedText: translationResult.translatedText,
+      culturalInsights: translationResult.culturalInsights,
+      audioData: audioData,
     };
   } catch (error) {
     console.error(error);
     return {
       translatedText: 'Error: Could not translate text.',
       culturalInsights: '',
+      audioData: '',
     };
   }
 }

@@ -1,8 +1,8 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useRef, useEffect } from 'react';
 import Image from 'next/image';
-import { ArrowRight, LoaderCircle, Volume2 } from 'lucide-react';
+import { ArrowRight, LoaderCircle, Volume2, Play } from 'lucide-react';
 
 import { handleTranslation } from '@/lib/actions';
 import type { TranslationState } from '@/lib/definitions';
@@ -45,8 +45,22 @@ export default function TranslationPage() {
   const initialState: TranslationState = {
     translatedText: '',
     culturalInsights: '',
+    audioData: '',
   };
   const [state, dispatch] = useActionState(handleTranslation, initialState);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handlePlayAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.play();
+    }
+  };
+
+  useEffect(() => {
+    if (state.audioData && audioRef.current) {
+      audioRef.current.src = state.audioData;
+    }
+  }, [state.audioData]);
 
   return (
     <div className="flex flex-col gap-8">
@@ -165,10 +179,11 @@ export default function TranslationPage() {
             )}
             <div className="flex w-full flex-col items-center justify-center gap-4">
                 <Waveform />
-                <Button variant="outline" size="icon" className="rounded-full h-12 w-12">
-                    <Volume2 className="h-6 w-6"/>
+                <Button variant="outline" size="icon" className="rounded-full h-12 w-12" onClick={handlePlayAudio} disabled={!state.audioData}>
+                    {state.audioData ? <Play className="h-6 w-6" /> : <Volume2 className="h-6 w-6"/>}
                     <span className="sr-only">Play Translated Audio</span>
                 </Button>
+                <audio ref={audioRef} className="hidden" />
             </div>
         </CardContent>
       </Card>
