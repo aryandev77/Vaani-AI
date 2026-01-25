@@ -40,7 +40,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Login Error:', error);
+      console.error('Full Login Error Object:', error);
       let errorMessage = 'An unexpected error occurred.';
       switch (error.code) {
         case 'auth/invalid-email':
@@ -69,7 +69,11 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-headline">Welcome Back</CardTitle>
           <CardDescription>
-            Enter your credentials to access your account
+            Enter your credentials to access your account. Don't have an
+            account?{' '}
+            <Link href="/signup" className="underline">
+              Sign Up
+            </Link>
           </CardDescription>
         </CardHeader>
         <CardContent>

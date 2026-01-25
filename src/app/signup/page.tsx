@@ -48,7 +48,7 @@ export default function SignupPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
-      console.error('Signup Error:', error);
+      console.error('Full Signup Error Object:', error);
       let errorMessage = 'An unexpected error occurred.';
       switch (error.code) {
         case 'auth/email-already-in-use':
