@@ -34,6 +34,10 @@ const languages = [
   { value: 'marathi', label: 'Marathi' },
   { value: 'tamil', label: 'Tamil' },
   { value: 'telugu', label: 'Telugu' },
+  { value: 'bhojpuri', label: 'Bhojpuri' },
+  { value: 'malayalam', label: 'Malayalam' },
+  { value: 'urdu', label: 'Urdu' },
+  { value: 'punjabi', label: 'Punjabi' },
 ];
 
 export default function EmotionPage() {
