@@ -12,6 +12,7 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
+import { LoaderCircle, UserX } from 'lucide-react';
 
 import { useAuth, useUser, useStorage } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -133,6 +134,28 @@ export default function ProfilePage() {
       }
     );
   };
+
+  if (user === undefined) {
+    return (
+      <div className="flex h-[400px] w-full items-center justify-center">
+        <LoaderCircle className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (user === null) {
+    return (
+      <div className="flex h-[400px] flex-col items-center justify-center gap-4 rounded-lg border border-dashed p-8 text-center">
+        <div className="rounded-full border border-dashed p-4">
+          <UserX className="h-12 w-12 text-muted-foreground" />
+        </div>
+        <h2 className="text-2xl font-semibold">Please Log In</h2>
+        <p className="text-muted-foreground">
+          You need to be logged in to view and edit your profile.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-8">

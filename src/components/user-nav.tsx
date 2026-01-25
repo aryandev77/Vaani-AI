@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { signOut } from 'firebase/auth';
+import { LogIn } from 'lucide-react';
 
 import { useAuth, useUser } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -18,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from './ui/skeleton';
 
 export function UserNav() {
   const userAvatar = getPlaceholderImage('user-avatar');
@@ -41,8 +43,18 @@ export function UserNav() {
     }
   };
 
+  if (user === undefined) {
+    return <Skeleton className="h-9 w-9 rounded-full" />;
+  }
+
   if (!user) {
-    return null;
+    return (
+      <Button asChild>
+        <Link href="/">
+          <LogIn className="mr-2" /> Login
+        </Link>
+      </Button>
+    );
   }
 
   return (
