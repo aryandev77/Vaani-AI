@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { LoaderCircle } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -16,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Logo } from '@/components/logo';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function SignupPage() {
@@ -26,6 +27,13 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const auth = useAuth();
+  const user = useUser();
+
+  useEffect(() => {
+    if (user) {
+      router.push('/dashboard');
+    }
+  }, [user, router]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +77,18 @@ export default function SignupPage() {
       setError(errorMessage);
     }
   };
+
+  if (user === undefined) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <LoaderCircle className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
