@@ -48,6 +48,7 @@ export default function SignupPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+      console.error('Signup Error:', error);
       let errorMessage = 'An unexpected error occurred.';
       switch (error.code) {
         case 'auth/email-already-in-use':
@@ -62,7 +63,7 @@ export default function SignupPage() {
           break;
         default:
           errorMessage =
-            'Sign-up failed. Please check your details and try again.';
+            "Sign-up failed. This can happen if the 'Email/Password' sign-in method is not enabled in your Firebase project. Please check your Firebase Console > Authentication > Sign-in method.";
           break;
       }
       setError(errorMessage);
