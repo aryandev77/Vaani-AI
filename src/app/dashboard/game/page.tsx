@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Award, Repeat, Zap, Columns } from 'lucide-react';
+import useSound from 'use-sound';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,6 +30,14 @@ const words = [
   { en: 'Water', es: 'Agua' },
   { en: 'Sun', es: 'Sol' },
 ];
+
+const SOUNDS = {
+  correct: '/sounds/correct.mp3',
+  incorrect: '/sounds/incorrect.mp3',
+  win: '/sounds/win.mp3',
+  start: '/sounds/start.mp3',
+  click: '/sounds/click.mp3',
+};
 
 const shuffleArray = <T,>(array: T[]): T[] => {
   return array.sort(() => Math.random() - 0.5);
@@ -95,8 +104,12 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
     {}
   );
   const [score, setScore] = useState(0);
+  const [playCorrect] = useSound(SOUNDS.correct);
+  const [playIncorrect] = useSound(SOUNDS.incorrect);
+  const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
 
   const handleSelect = (side: 'left' | 'right', value: string) => {
+    playClick();
     if (side === 'left') setSelectedLeft(value);
     if (side === 'right') setSelectedRight(value);
 
@@ -110,8 +123,10 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
       if (leftVal && rightVal && gameData.mapping[leftVal] === rightVal) {
         setCorrectPairs(prev => ({ ...prev, [leftVal]: rightVal }));
         setScore(prev => prev + 1);
+        playCorrect();
       } else if (leftVal && rightVal) {
         setIncorrectPairs(prev => ({ ...prev, [leftVal]: rightVal }));
+        playIncorrect();
         setTimeout(() => {
           setIncorrectPairs(prev => {
             const newIncorrect = { ...prev };
@@ -195,6 +210,8 @@ const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [playCorrect] = useSound(SOUNDS.correct);
+  const [playIncorrect] = useSound(SOUNDS.incorrect);
 
   const question = gameData[currentQuestion];
 
@@ -205,8 +222,10 @@ const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
     if (answer === question.answer) {
       setIsCorrect(true);
       setScore(s => s + 1);
+      playCorrect();
     } else {
       setIsCorrect(false);
+      playIncorrect();
     }
 
     setTimeout(() => {
@@ -266,6 +285,14 @@ const ScoreScreen = ({
   onMainMenu,
 }: any) => {
   const success = score >= 3;
+  const [playWin] = useSound(SOUNDS.win, { volume: 0.7 });
+  const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
+
+  useEffect(() => {
+    if (success) {
+      playWin();
+    }
+  }, [success, playWin]);
 
   return (
     <motion.div
@@ -305,18 +332,18 @@ const ScoreScreen = ({
             <p className="text-2xl text-muted-foreground">/ 5</p>
           </div>
           <div className="flex justify-center gap-4">
-            <Button variant="outline" onClick={onRestart}>
+            <Button variant="outline" onClick={() => { playClick(); onRestart(); }}>
               <Repeat className="mr-2" /> Try Again
             </Button>
             {success && (
-              <Button onClick={onNextLevel}>
+              <Button onClick={() => { playClick(); onNextLevel(); }}>
                 Next Level <Award className="ml-2" />
               </Button>
             )}
           </div>
         </CardContent>
       </Card>
-      <Button variant="link" onClick={onMainMenu} className="mt-4">
+      <Button variant="link" onClick={() => { playClick(); onMainMenu(); }} className="mt-4">
         Back to Main Menu
       </Button>
     </motion.div>
@@ -331,8 +358,11 @@ export default function GamePage() {
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
   const [gameData, setGameData] = useState(getGameData(level));
+  const [playStart] = useSound(SOUNDS.start);
+  const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
 
   const startGame = (type: GameType) => {
+    playStart();
     setGameType(type);
     setGameState('playing');
     setGameData(getGameData(level));
@@ -344,6 +374,7 @@ export default function GamePage() {
   };
 
   const handleNextLevel = () => {
+    playStart();
     const nextLevel = level + 1;
     setLevel(nextLevel);
     setGameData(getGameData(nextLevel));
@@ -351,11 +382,13 @@ export default function GamePage() {
   };
 
   const handleRestart = () => {
+    playStart();
     setGameData(getGameData(level));
     setGameState('playing');
   };
 
   const handleMainMenu = () => {
+    playClick();
     setGameState('menu');
     setGameType(null);
   };
