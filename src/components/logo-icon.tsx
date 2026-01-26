@@ -18,7 +18,7 @@ export function LogoIcon({ className }: { className?: string }) {
       </defs>
       <rect width="28" height="28" rx="6" fill="url(#logoGradient)" />
       <path
-        d="M 6 9 L 10 17 Q 14 21 18 17 L 22 9"
+        d="M 6 9 L 12 19 Q 14 21 16 19 L 22 9"
         stroke="hsl(var(--primary-foreground))"
         strokeWidth="3"
         strokeLinecap="round"
