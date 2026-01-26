@@ -3,6 +3,8 @@
 import { useActionState, useRef, useEffect, useState } from 'react';
 import { LoaderCircle, SendHorizonal, User, BookOpen } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import { handleScriptureChat } from '@/lib/actions';
 import type { ScriptureChatState, ChatHistoryItem } from '@/lib/definitions';
@@ -263,9 +265,23 @@ export default function SpiritualTextsPage() {
                         : 'bg-muted'
                     )}
                   >
-                    <p className="whitespace-pre-wrap">
-                      {message.content[0].text}
-                    </p>
+                     {message.role === 'model' ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className="prose prose-sm dark:prose-invert"
+                        components={{
+                          p: ({ node, ...props }) => (
+                            <p className="mb-2 last:mb-0" {...props} />
+                          ),
+                        }}
+                      >
+                        {message.content[0].text}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="whitespace-pre-wrap">
+                        {message.content[0].text}
+                      </p>
+                    )}
                   </div>
                   {message.role === 'user' && user && (
                     <Avatar className="h-9 w-9">

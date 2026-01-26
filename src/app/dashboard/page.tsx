@@ -10,6 +10,8 @@ import {
   Mail,
   Globe,
 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 import { handleChat } from '@/lib/actions';
 import type { ChatState } from '@/lib/definitions';
@@ -211,9 +213,23 @@ export default function DashboardPage() {
                         : 'bg-muted'
                     )}
                   >
-                    <p className="whitespace-pre-wrap">
-                      {message.content[0].text}
-                    </p>
+                    {message.role === 'model' ? (
+                      <ReactMarkdown
+                        remarkPlugins={[remarkGfm]}
+                        className="prose prose-sm dark:prose-invert"
+                        components={{
+                          p: ({ node, ...props }) => (
+                            <p className="mb-2 last:mb-0" {...props} />
+                          ),
+                        }}
+                      >
+                        {message.content[0].text}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="whitespace-pre-wrap">
+                        {message.content[0].text}
+                      </p>
+                    )}
                   </div>
                   {message.role === 'user' && user && (
                     <Avatar className="h-9 w-9">
