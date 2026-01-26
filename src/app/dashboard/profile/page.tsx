@@ -215,7 +215,7 @@ export default function ProfilePage() {
       toast({ title: 'Password updated successfully!' });
       setCurrentPassword('');
       setNewPassword('');
-    } catch (error: any) => {
+    } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Error updating password',
