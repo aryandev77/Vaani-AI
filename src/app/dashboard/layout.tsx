@@ -9,6 +9,7 @@ import {
   History,
   Info,
   Languages,
+  MessageSquare,
   Smile,
   Swords,
 } from 'lucide-react';
@@ -45,6 +46,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard': 'Real-Time Translation',
       '/dashboard/learning': 'Learning Mode',
       '/dashboard/emotion': 'Emotion & Tone Preservation',
+      '/dashboard/chatbot': 'AI Language Tutor',
       '/dashboard/history': 'Conversation History',
       '/dashboard/about': 'About Vaani AI',
       '/dashboard/profile': 'Profile Settings',
@@ -116,6 +118,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/emotion">
                     <Smile />
                     <span>Emotion Tool</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'AI Tutor',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  isActive={pathname === '/dashboard/chatbot'}
+                >
+                  <Link href="/dashboard/chatbot">
+                    <MessageSquare />
+                    <span>AI Tutor</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

@@ -4,11 +4,14 @@ import type {
   TranslationState,
   InsightState,
   EmotionState,
+  ChatState,
+  ChatHistoryItem,
 } from './definitions';
 import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
 import { summarizeCulturalInsights } from '@/ai/flows/summarize-cultural-insights';
 import { detectAndPreserveEmotion } from '@/ai/flows/detect-and-preserve-emotion';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
+import { chatWithBot } from '@/ai/flows/chatbot';
 
 export async function handleTranslation(
   prevState: TranslationState,
@@ -29,8 +32,8 @@ export async function handleTranslation(
 
     let audioData = '';
     if (translationResult.translatedText) {
-       const ttsResult = await textToSpeech(translationResult.translatedText);
-       audioData = ttsResult.audioData;
+      const ttsResult = await textToSpeech(translationResult.translatedText);
+      audioData = ttsResult.audioData;
     }
 
     return {
@@ -87,6 +90,53 @@ export async function handleEmotion(
     console.error(error);
     return {
       translatedText: 'Error: Could not translate text.',
+    };
+  }
+}
+
+export async function handleChat(
+  prevState: ChatState,
+  formData: FormData
+): Promise<ChatState> {
+  const query = formData.get('query') as string;
+
+  if (!query?.trim()) {
+    return {
+      ...prevState,
+    };
+  }
+
+  const userMessage: ChatHistoryItem = {
+    role: 'user',
+    content: [{ text: query }],
+  };
+
+  const currentHistory = [...prevState.history, userMessage];
+
+  try {
+    const result = await chatWithBot({
+      query,
+      history: prevState.history, // send previous history for context
+    });
+
+    const modelMessage: ChatHistoryItem = {
+      role: 'model',
+      content: [{ text: result.response }],
+    };
+
+    return {
+      history: [...currentHistory, modelMessage],
+    };
+  } catch (error) {
+    console.error(error);
+    const errorMessage = 'Error: I had a problem responding. Please try again.';
+    const modelMessage: ChatHistoryItem = {
+      role: 'model',
+      content: [{ text: errorMessage }],
+    };
+    return {
+      history: [...currentHistory, modelMessage],
+      error: errorMessage,
     };
   }
 }

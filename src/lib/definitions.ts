@@ -17,10 +17,20 @@ export type EmotionState = {
 };
 
 export type Conversation = {
-    id: number;
-    sourceText: string;
-    translatedText: string;
-    sourceLang: string;
-    targetLang: string;
-    date: string;
-}
+  id: number;
+  sourceText: string;
+  translatedText: string;
+  sourceLang: string;
+  targetLang: string;
+  date: string;
+};
+
+export type ChatHistoryItem = {
+  role: 'user' | 'model';
+  content: { text: string }[];
+};
+
+export type ChatState = {
+  history: ChatHistoryItem[];
+  error?: string;
+};
