@@ -28,17 +28,12 @@ const ExamplePromptCard = ({
   icon,
   title,
   subtitle,
-  onClick,
 }: {
   icon: React.ReactNode;
   title: string;
   subtitle: string;
-  onClick: () => void;
 }) => (
-  <Card
-    className="cursor-pointer text-left transition-colors hover:bg-muted"
-    onClick={onClick}
-  >
+  <Card className="h-full text-left transition-colors group-hover:bg-muted">
     <div className="flex flex-row items-center gap-4 p-4">
       {icon}
       <div>
@@ -75,12 +70,6 @@ export default function DashboardPage() {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }
   }, [state.history, isPending]);
-
-  const handleExampleClick = (query: string) => {
-    const formData = new FormData();
-    formData.append('query', query);
-    dispatch(formData);
-  };
 
   return (
     <div className="flex h-full flex-col">
@@ -121,44 +110,78 @@ export default function DashboardPage() {
               </h1>
             </div>
             <div className="w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 md:grid">
-              <ExamplePromptCard
-                icon={<Lightbulb className="h-6 w-6 text-primary" />}
-                title="Explain an idiom"
-                subtitle="'Break a leg'"
-                onClick={() =>
-                  handleExampleClick("Explain the idiom 'break a leg'")
-                }
-              />
-              <ExamplePromptCard
-                icon={<Languages className="h-6 w-6 text-primary" />}
-                title="Translate a phrase"
-                subtitle="'Where is the nearest train station?' in Japanese"
-                onClick={() =>
-                  handleExampleClick(
-                    "How do I say 'Where is the nearest train station?' in Japanese?"
-                  )
-                }
-              />
-              <ExamplePromptCard
-                icon={<Mail className="h-6 w-6 text-primary" />}
-                title="Help me write an email"
-                subtitle="To a professor, asking for an extension"
-                onClick={() =>
-                  handleExampleClick(
-                    'Help me write a formal email to a professor asking for an extension on an assignment.'
-                  )
-                }
-              />
-              <ExamplePromptCard
-                icon={<Globe className="h-6 w-6 text-primary" />}
-                title="Explain cultural context"
-                subtitle="The difference between 'siesta' in Spain and a 'nap'"
-                onClick={() =>
-                  handleExampleClick(
-                    "What's the cultural difference between a 'siesta' in Spain and a regular nap?"
-                  )
-                }
-              />
+              <form action={dispatch}>
+                <input
+                  type="hidden"
+                  name="query"
+                  value="Explain the idiom 'break a leg'"
+                />
+                <button
+                  type="submit"
+                  className="group h-full w-full text-left"
+                  disabled={isPending}
+                >
+                  <ExamplePromptCard
+                    icon={<Lightbulb className="h-6 w-6 text-primary" />}
+                    title="Explain an idiom"
+                    subtitle="'Break a leg'"
+                  />
+                </button>
+              </form>
+              <form action={dispatch}>
+                <input
+                  type="hidden"
+                  name="query"
+                  value="How do I say 'Where is the nearest train station?' in Japanese?"
+                />
+                <button
+                  type="submit"
+                  className="group h-full w-full text-left"
+                  disabled={isPending}
+                >
+                  <ExamplePromptCard
+                    icon={<Languages className="h-6 w-6 text-primary" />}
+                    title="Translate a phrase"
+                    subtitle="'Where is the nearest train station?' in Japanese"
+                  />
+                </button>
+              </form>
+              <form action={dispatch}>
+                <input
+                  type="hidden"
+                  name="query"
+                  value="Help me write a formal email to a professor asking for an extension on an assignment."
+                />
+                <button
+                  type="submit"
+                  className="group h-full w-full text-left"
+                  disabled={isPending}
+                >
+                  <ExamplePromptCard
+                    icon={<Mail className="h-6 w-6 text-primary" />}
+                    title="Help me write an email"
+                    subtitle="To a professor, asking for an extension"
+                  />
+                </button>
+              </form>
+              <form action={dispatch}>
+                <input
+                  type="hidden"
+                  name="query"
+                  value="What's the cultural difference between a 'siesta' in Spain and a regular nap?"
+                />
+                <button
+                  type="submit"
+                  className="group h-full w-full text-left"
+                  disabled={isPending}
+                >
+                  <ExamplePromptCard
+                    icon={<Globe className="h-6 w-6 text-primary" />}
+                    title="Explain cultural context"
+                    subtitle="The difference between 'siesta' in Spain and a 'nap'"
+                  />
+                </button>
+              </form>
             </div>
           </div>
         ) : (
