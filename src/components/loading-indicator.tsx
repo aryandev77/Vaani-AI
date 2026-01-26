@@ -25,9 +25,9 @@ export function LoadingIndicator({
         <rect width="28" height="28" rx="6" fill="url(#logoGradient)" />
         <path
           className="v-path"
-          d="M6 9 L14 20 L22 9"
+          d="M 6 9 L 10 17 Q 14 21 18 17 L 22 9"
           stroke="hsl(var(--primary-foreground))"
-          strokeWidth="2.5"
+          strokeWidth="3"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"

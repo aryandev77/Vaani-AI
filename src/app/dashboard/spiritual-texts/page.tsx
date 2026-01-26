@@ -1,7 +1,7 @@
 'use client';
 
 import { useActionState, useRef, useEffect, useState } from 'react';
-import { Bot, LoaderCircle, SendHorizonal, User, BookOpen } from 'lucide-react';
+import { LoaderCircle, SendHorizonal, User, BookOpen } from 'lucide-react';
 import { doc, getDoc } from 'firebase/firestore';
 
 import { handleScriptureChat } from '@/lib/actions';
@@ -34,6 +34,7 @@ import {
   type ScriptureChapter,
 } from '@/lib/scriptures';
 import { Skeleton } from '@/components/ui/skeleton';
+import { LogoIcon } from '@/components/logo-icon';
 
 export default function SpiritualTextsPage() {
   const user = useUser();
@@ -249,8 +250,8 @@ export default function SpiritualTextsPage() {
                 >
                   {message.role === 'model' && (
                     <Avatar className="h-9 w-9 border">
-                      <AvatarFallback>
-                        <Bot />
+                      <AvatarFallback className="bg-transparent p-1">
+                        <LogoIcon />
                       </AvatarFallback>
                     </Avatar>
                   )}
@@ -289,8 +290,8 @@ export default function SpiritualTextsPage() {
               {isPending && (
                 <div className="flex items-start justify-start gap-4">
                   <Avatar className="h-9 w-9 border">
-                    <AvatarFallback>
-                      <Bot />
+                    <AvatarFallback className="bg-transparent p-1">
+                      <LogoIcon />
                     </AvatarFallback>
                   </Avatar>
                   <div className="max-w-xl rounded-lg bg-muted p-3 text-sm shadow-sm">

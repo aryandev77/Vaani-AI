@@ -1,0 +1,30 @@
+import { cn } from '@/lib/utils';
+
+export function LogoIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      width="28"
+      height="28"
+      viewBox="0 0 28 28"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={cn(className)}
+    >
+      <defs>
+        <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="hsl(var(--primary))" />
+          <stop offset="100%" stopColor="hsl(var(--accent))" />
+        </linearGradient>
+      </defs>
+      <rect width="28" height="28" rx="6" fill="url(#logoGradient)" />
+      <path
+        d="M 6 9 L 10 17 Q 14 21 18 17 L 22 9"
+        stroke="hsl(var(--primary-foreground))"
+        strokeWidth="3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        fill="none"
+      />
+    </svg>
+  );
+}

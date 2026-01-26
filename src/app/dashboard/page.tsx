@@ -3,7 +3,6 @@
 import { useActionState, useRef, useEffect } from 'react';
 import {
   SendHorizonal,
-  Bot,
   User,
   LoaderCircle,
   Lightbulb,
@@ -22,6 +21,7 @@ import { useUser } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { Card } from '@/components/ui/card';
+import { LogoIcon } from '@/components/logo-icon';
 
 // New component for example prompts
 const ExamplePromptCard = ({
@@ -97,9 +97,9 @@ export default function DashboardPage() {
                   fill="url(#logoGradient)"
                 />
                 <path
-                  d="M6 9 L14 20 L22 9"
+                  d="M 6 9 L 10 17 Q 14 21 18 17 L 22 9"
                   stroke="hsl(var(--primary-foreground))"
-                  strokeWidth="2.5"
+                  strokeWidth="3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   fill="none"
@@ -198,8 +198,8 @@ export default function DashboardPage() {
                 >
                   {message.role === 'model' && (
                     <Avatar className="h-9 w-9 border">
-                      <AvatarFallback>
-                        <Bot />
+                      <AvatarFallback className="bg-transparent p-1">
+                        <LogoIcon />
                       </AvatarFallback>
                     </Avatar>
                   )}
@@ -238,8 +238,8 @@ export default function DashboardPage() {
               {isPending && (
                 <div className="flex items-start justify-start gap-4">
                   <Avatar className="h-9 w-9 border">
-                    <AvatarFallback>
-                      <Bot />
+                    <AvatarFallback className="bg-transparent p-1">
+                      <LogoIcon />
                     </AvatarFallback>
                   </Avatar>
                   <div className="max-w-xl rounded-lg bg-muted p-3 text-sm shadow-sm">
