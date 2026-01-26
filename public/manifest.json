@@ -1,0 +1,17 @@
+{
+  "name": "Vaani AI",
+  "short_name": "Vaani AI",
+  "description": "Real-Time AI Voice Translation and Cultural Context Engine",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ],
+  "theme_color": "#8A5CFE",
+  "background_color": "#020817",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait"
+}

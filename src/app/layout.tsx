@@ -8,6 +8,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 export const metadata: Metadata = {
   title: 'Vaani AI',
   description: 'Real-Time AI Voice Translation and Cultural Context Engine',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -24,6 +25,8 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Source+Code+Pro:wght@400;500&display=swap"
           rel="stylesheet"
         />
+        <link rel="apple-touch-icon" href="/icon.svg" />
+        <meta name="theme-color" content="#8A5CFE" />
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
