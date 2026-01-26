@@ -34,3 +34,8 @@ export type ChatState = {
   history: ChatHistoryItem[];
   error?: string;
 };
+
+export type ReligiousTextAnalysisState = {
+  translationAndExplanation?: string;
+  error?: string;
+};

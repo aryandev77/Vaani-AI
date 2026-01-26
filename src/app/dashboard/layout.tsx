@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Smile,
   Swords,
+  BookMarked,
 } from 'lucide-react';
 
 import {
@@ -53,6 +54,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard/billing': 'Billing',
       '/dashboard/settings': 'Settings',
       '/dashboard/game': 'Language Games',
+      '/dashboard/spiritual-texts': 'Spiritual Texts',
     };
     return pageTitles[pathname] || 'Dashboard';
   }, [pathname]);
@@ -118,6 +120,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/learning">
                     <Book />
                     <span>Learning Mode</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Spiritual Texts',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  isActive={pathname === '/dashboard/spiritual-texts'}
+                >
+                  <Link href="/dashboard/spiritual-texts">
+                    <BookMarked />
+                    <span>Spiritual Texts</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
