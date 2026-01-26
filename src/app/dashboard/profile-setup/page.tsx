@@ -51,6 +51,7 @@ const profileSetupSchema = z.object({
   gender: z.string().optional(),
   dob: z.date().optional(),
   nationality: z.string().optional(),
+  religion: z.string().optional(),
   spokenLanguages: z.string().optional(),
   culturalPreferences: z.string().optional(),
 });
@@ -70,6 +71,7 @@ export default function ProfileSetupPage() {
       name: '',
       gender: '',
       nationality: '',
+      religion: '',
       spokenLanguages: '',
       culturalPreferences: '',
     },
@@ -88,6 +90,7 @@ export default function ProfileSetupPage() {
               gender: data.gender || '',
               dob: data.dob ? (data.dob as Timestamp).toDate() : undefined,
               nationality: data.nationality || '',
+              religion: data.religion || '',
               spokenLanguages: data.spokenLanguages || '',
               culturalPreferences: data.culturalPreferences || '',
             });
@@ -261,19 +264,52 @@ export default function ProfileSetupPage() {
             <CardTitle>Cultural & Language Profile</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <FormField
-              control={form.control}
-              name="nationality"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nationality</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., American, Indian" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+               <FormField
+                control={form.control}
+                name="nationality"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nationality</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., American, Indian" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="religion"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Religion / Worldview</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your belief" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="hinduism">Hinduism</SelectItem>
+                        <SelectItem value="christianity">Christianity</SelectItem>
+                        <SelectItem value="islam">Islam</SelectItem>
+                        <SelectItem value="buddhism">Buddhism</SelectItem>
+                        <SelectItem value="judaism">Judaism</SelectItem>
+                        <SelectItem value="sikhism">Sikhism</SelectItem>
+                        <SelectItem value="agnostic">Agnostic</SelectItem>
+                        <SelectItem value="atheist">Atheist</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                         <SelectItem value="prefer-not-to-say">
+                          Prefer not to say
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+             </div>
             <FormField
               control={form.control}
               name="spokenLanguages"

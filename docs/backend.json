@@ -44,6 +44,22 @@
         "profileComplete": {
           "type": "boolean",
           "description": "Whether the user has completed their detailed profile setup."
+        },
+        "religion": {
+          "type": "string",
+          "description": "The user's religion or spiritual belief.",
+          "enum": [
+            "hinduism",
+            "christianity",
+            "islam",
+            "buddhism",
+            "judaism",
+            "sikhism",
+            "agnostic",
+            "atheist",
+            "other",
+            "prefer-not-to-say"
+          ]
         }
       },
       "required": [
