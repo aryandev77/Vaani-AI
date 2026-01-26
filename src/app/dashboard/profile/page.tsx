@@ -19,7 +19,11 @@ import {
   Users,
   Languages,
   MessageSquare,
+  TrendingUp,
+  ThumbsUp,
+  PieChart as PieChartIcon,
 } from 'lucide-react';
+import { Bar, BarChart, CartesianGrid, Pie, PieChart, XAxis } from 'recharts';
 
 import { useAuth, useUser, useStorage } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -48,6 +52,69 @@ import { Progress } from '@/components/ui/progress';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingIndicator } from '@/components/loading-indicator';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+
+const userGrowthData = [
+  { month: 'January', users: 18 },
+  { month: 'February', users: 30 },
+  { month: 'March', users: 54 },
+  { month: 'April', users: 78 },
+  { month: 'May', users: 110 },
+  { month: 'June', users: 128 },
+];
+
+const userGrowthChartConfig = {
+  users: {
+    label: 'New Users',
+    color: 'hsl(var(--primary))',
+  },
+} satisfies ChartConfig;
+
+const languageDistributionData = [
+  { language: 'Spanish', translations: 275, fill: 'var(--color-spanish)' },
+  { language: 'French', translations: 200, fill: 'var(--color-french)' },
+  { language: 'German', translations: 187, fill: 'var(--color-german)' },
+  { language: 'Japanese', translations: 173, fill: 'var(--color-japanese)' },
+  { language: 'Hindi', translations: 150, fill: 'var(--color-hindi)' },
+  { language: 'Other', translations: 265, fill: 'var(--color-other)' },
+];
+
+const languageChartConfig = {
+  translations: {
+    label: 'Translations',
+  },
+  spanish: {
+    label: 'Spanish',
+    color: 'hsl(var(--chart-1))',
+  },
+  french: {
+    label: 'French',
+    color: 'hsl(var(--chart-2))',
+  },
+  german: {
+    label: 'German',
+    color: 'hsl(var(--chart-3))',
+  },
+  japanese: {
+    label: 'Japanese',
+    color: 'hsl(var(--chart-4))',
+  },
+  hindi: {
+    label: 'Hindi',
+    color: 'hsl(var(--chart-5))',
+  },
+  other: {
+    label: 'Other',
+    color: 'hsl(var(--muted))',
+  },
+} satisfies ChartConfig;
 
 export default function ProfilePage() {
   const user = useUser();
@@ -70,7 +137,7 @@ export default function ProfilePage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   // You can change the secret code for founder mode here
-  const ADMIN_SECRET_CODE = 'VIBGYOR7';
+  const ADMIN_SECRET_CODE = 'VAANI_FOUNDER_777';
 
   useEffect(() => {
     if (user) {
@@ -413,52 +480,143 @@ export default function ProfilePage() {
               High-level metrics for your application.
             </CardDescription>
           </CardHeader>
-          <CardContent className="grid gap-4 sm:grid-cols-3">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Total Users
-                </CardTitle>
-                <Users className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">128</div>
-                <p className="text-xs text-muted-foreground">
-                  +15 since last week
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Translations Made
-                </CardTitle>
-                <MessageSquare className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">+1,234</div>
-                <p className="text-xs text-muted-foreground">
-                  +82 in the last hour
-                </p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  Active Languages
-                </CardTitle>
-                <Languages className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">7</div>
-                <p className="text-xs text-muted-foreground">
-                  Chinese was added recently
-                </p>
-              </CardContent>
-            </Card>
+          <CardContent className="grid gap-6">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Total Users
+                  </CardTitle>
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">128</div>
+                  <p className="text-xs text-muted-foreground">
+                    +15 since last week
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Translations Made
+                  </CardTitle>
+                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">+1,234</div>
+                  <p className="text-xs text-muted-foreground">
+                    +82 in the last hour
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Active Languages
+                  </CardTitle>
+                  <Languages className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">7</div>
+                  <p className="text-xs text-muted-foreground">
+                    Chinese was added recently
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">
+                    Positive Feedback
+                  </CardTitle>
+                  <ThumbsUp className="h-4 w-4 text-muted-foreground" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">96%</div>
+                  <p className="text-xs text-muted-foreground">
+                    From 254 reviews
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5" />
+                    Monthly User Growth
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer
+                    config={userGrowthChartConfig}
+                    className="min-h-[200px] w-full"
+                  >
+                    <BarChart accessibilityLayer data={userGrowthData}>
+                      <CartesianGrid vertical={false} />
+                      <XAxis
+                        dataKey="month"
+                        tickLine={false}
+                        tickMargin={10}
+                        axisLine={false}
+                        tickFormatter={(value) => value.slice(0, 3)}
+                      />
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent hideLabel />}
+                      />
+                      <Bar
+                        dataKey="users"
+                        fill="var(--color-users)"
+                        radius={8}
+                      />
+                    </BarChart>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChartIcon className="h-5 w-5" />
+                    Language Distribution
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="flex-1 pb-0">
+                  <ChartContainer
+                    config={languageChartConfig}
+                    className="mx-auto aspect-square max-h-[250px]"
+                  >
+                    <PieChart>
+                      <ChartTooltip
+                        cursor={false}
+                        content={<ChartTooltipContent hideLabel />}
+                      />
+                      <Pie
+                        data={languageDistributionData}
+                        dataKey="translations"
+                        nameKey="language"
+                        innerRadius={60}
+                        strokeWidth={5}
+                      >
+                        {languageDistributionData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                    </PieChart>
+                  </ChartContainer>
+                </CardContent>
+                <CardFooter className="flex-col gap-2 text-sm">
+                  <ChartLegend
+                    content={<ChartLegendContent nameKey="language" />}
+                  />
+                </CardFooter>
+              </Card>
+            </div>
           </CardContent>
         </Card>
       )}
     </div>
   );
 }
+
+    
