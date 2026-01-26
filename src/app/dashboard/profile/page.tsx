@@ -381,7 +381,7 @@ export default function ProfilePage() {
           </div>
         </CardContent>
       </Card>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Detailed Profile</CardTitle>

@@ -17,31 +17,39 @@
         "gender": {
           "type": "string",
           "description": "The user's gender.",
-          "enum": ["male", "female", "other", "prefer-not-to-say"]
+          "enum": [
+            "male",
+            "female",
+            "other",
+            "prefer-not-to-say"
+          ]
         },
         "dob": {
-            "type": "string",
-            "format": "date",
-            "description": "The user's date of birth."
+          "type": "string",
+          "format": "date",
+          "description": "The user's date of birth."
         },
         "nationality": {
-            "type": "string",
-            "description": "The user's nationality."
+          "type": "string",
+          "description": "The user's nationality."
         },
         "spokenLanguages": {
-            "type": "string",
-            "description": "Languages spoken by the user, comma-separated."
+          "type": "string",
+          "description": "Languages spoken by the user, comma-separated."
         },
         "culturalPreferences": {
-            "type": "string",
-            "description": "User's cultural preferences and notes for better AI interaction."
+          "type": "string",
+          "description": "User's cultural preferences and notes for better AI interaction."
         },
         "profileComplete": {
-            "type": "boolean",
-            "description": "Whether the user has completed their detailed profile setup."
+          "type": "boolean",
+          "description": "Whether the user has completed their detailed profile setup."
         }
       },
-      "required": ["name", "email"]
+      "required": [
+        "name",
+        "email"
+      ]
     },
     "translation": {
       "title": "Translation Record",
@@ -128,7 +136,9 @@
     }
   },
   "auth": {
-    "providers": ["email"]
+    "providers": [
+      "email"
+    ]
   },
   "firestore": {
     "/users/{userId}": {
