@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Award, Repeat, Zap, Columns } from 'lucide-react';
+import { Check, X, Award, Repeat, Zap, Columns, Heart } from 'lucide-react';
 import useSound from 'use-sound';
 import { Button } from '@/components/ui/button';
 import {
@@ -133,40 +133,55 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
   const [incorrectPairs, setIncorrectPairs] = useState<Record<string, string>>(
     {}
   );
-  const [score, setScore] = useState(0);
+  const [lives, setLives] = useState(3);
   const [playCorrect] = useSound(SOUNDS.correct);
   const [playIncorrect] = useSound(SOUNDS.incorrect);
   const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
+  const isGameOver = lives <= 0;
 
   useEffect(() => {
     if (Object.keys(correctPairs).length === gameData.left.length) {
-      onGameEnd(score);
+      onGameEnd(Object.keys(correctPairs).length);
     }
-  }, [correctPairs, score, onGameEnd, gameData.left.length]);
+  }, [correctPairs, onGameEnd, gameData.left.length]);
+
+  useEffect(() => {
+    if (lives <= 0) {
+      setTimeout(() => onGameEnd(Object.keys(correctPairs).length), 1000);
+    }
+  }, [lives, onGameEnd, correctPairs]);
+
 
   const handleSelect = (side: 'left' | 'right', value: string) => {
+    if (isGameOver) return;
     playClick();
-    if (side === 'left') setSelectedLeft(value);
-    if (side === 'right') setSelectedRight(value);
 
-    if (
-      (side === 'left' && selectedRight) ||
-      (side === 'right' && selectedLeft)
-    ) {
-      const leftVal = side === 'left' ? value : selectedLeft;
-      const rightVal = side === 'right' ? value : selectedRight;
+    let currentLeft = selectedLeft;
+    let currentRight = selectedRight;
 
-      if (leftVal && rightVal && gameData.mapping[leftVal] === rightVal) {
-        setCorrectPairs(prev => ({ ...prev, [leftVal]: rightVal }));
-        setScore(prev => prev + 1);
+    if (side === 'left') {
+      currentLeft = value;
+      setSelectedLeft(value);
+    } else {
+      currentRight = value;
+      setSelectedRight(value);
+    }
+
+    if (currentLeft && currentRight) {
+      if (gameData.mapping[currentLeft] === currentRight) {
+        setCorrectPairs(prev => ({ ...prev, [currentLeft]: currentRight }));
         playCorrect();
-      } else if (leftVal && rightVal) {
-        setIncorrectPairs(prev => ({ ...prev, [leftVal]: rightVal }));
+      } else {
+        setLives(prev => prev - 1);
+        setIncorrectPairs(prev => ({
+          ...prev,
+          [currentLeft as string]: currentRight as string,
+        }));
         playIncorrect();
         setTimeout(() => {
           setIncorrectPairs(prev => {
             const newIncorrect = { ...prev };
-            delete newIncorrect[leftVal];
+            delete newIncorrect[currentLeft as string];
             return newIncorrect;
           });
         }, 1000);
@@ -188,9 +203,25 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-      <h2 className="mb-4 text-center text-2xl font-bold">
-        Match the Words (Level {level})
-      </h2>
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-2xl font-bold">
+          Match the Words (Level {level})
+        </h2>
+        <div className="flex items-center gap-2">
+          {[...Array(3)].map((_, i) => (
+            <Heart
+              key={i}
+              className={cn(
+                'h-6 w-6 transition-colors',
+                i < lives
+                  ? 'text-red-500 fill-red-500'
+                  : 'text-muted-foreground/50'
+              )}
+            />
+          ))}
+        </div>
+      </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           {gameData.left.map((word: string) => (
@@ -206,7 +237,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
                   'bg-red-500/20 text-white hover:bg-red-500/30 animate-shake'
               )}
               onClick={() => handleSelect('left', word)}
-              disabled={isComplete(word, 'left')}
+              disabled={isComplete(word, 'left') || isGameOver}
             >
               {word}
             </Button>
@@ -226,7 +257,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
                   'bg-red-500/20 text-white hover:bg-red-500/30 animate-shake'
               )}
               onClick={() => handleSelect('right', word)}
-              disabled={isComplete(word, 'right')}
+              disabled={isComplete(word, 'right') || isGameOver}
             >
               {word}
             </Button>
@@ -236,6 +267,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
     </motion.div>
   );
 };
+
 
 const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -577,3 +609,5 @@ export default function GamePage() {
   animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
 }
 */
+
+    
