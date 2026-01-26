@@ -1,9 +1,10 @@
 'use client';
 
-import { useActionState } from 'react';
-import { BookMarked, LoaderCircle } from 'lucide-react';
-import { handleReligiousText } from '@/lib/actions';
-import type { ReligiousTextAnalysisState } from '@/lib/definitions';
+import { useActionState, useRef, useEffect } from 'react';
+import { Bot, LoaderCircle, SendHorizonal, User } from 'lucide-react';
+
+import { handleScriptureChat } from '@/lib/actions';
+import type { ScriptureChatState, ChatHistoryItem } from '@/lib/definitions';
 import {
   Card,
   CardContent,
@@ -11,157 +12,222 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { SubmitButton } from '@/components/submit-button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useUser } from '@/firebase';
+import { cn } from '@/lib/utils';
+import { getPlaceholderImage } from '@/lib/placeholder-images';
 
-const languages = [
-  { value: 'english', label: 'English' },
-  { value: 'hindi', label: 'Hindi' },
-  { value: 'sanskrit', label: 'Sanskrit' },
-  { value: 'spanish', label: 'Spanish' },
-  { value: 'french', label: 'French' },
-  { value: 'german', label: 'German' },
-  { value: 'japanese', label: 'Japanese' },
-  { value: 'chinese', label: 'Chinese' },
-  { value: 'arabic', label: 'Arabic' },
-  { value: 'hebrew', label: 'Hebrew' },
-  { value: 'greek', label: 'Greek' },
-];
+const scriptureText = `
+Bhagavad Gita - Chapter 1
+
+Verse 1
+धृतराष्ट्र उवाच |
+धर्मक्षेत्रे कुरुक्षेत्रे समवेता युयुत्सवः |
+मामकाः पाण्डवाश्चैव किमकुर्वत सञ्जय || १ ||
+
+dhṛtarāṣṭra uvāca |
+dharmakṣetre kurukṣetre samavetā yuyutsavaḥ |
+māmakāḥ pāṇḍavāścaiva kimakurvata sañjaya || 1 ||
+
+Dhritarashtra said: O Sanjaya, after my sons and the sons of Pandu assembled in the place of pilgrimage at Kurukshetra, desiring to fight, what did they do?
+
+---
+
+Verse 2
+सञ्जय उवाच |
+दृष्ट्वा तु पाण्डवानीकं व्यूढं दुर्योधनस्तदा |
+आचार्यमुपसङ्गम्य राजा वचनमब्रवीत् || २ ||
+
+sañjaya uvāca |
+dṛṣṭvā tu pāṇḍavānīkaṁ vyūḍhaṁ duryodhanastadā |
+ācāryamupasaṅgamya rājā vacanamabravīt || 2 ||
+
+Sanjaya said: On seeing the army of the Pandavas drawn in military array, King Duryodhana then approached his teacher (Drona) and spoke the following words.
+
+---
+
+Verse 3
+पश्यैतां पाण्डुपुत्राणामाचार्य महतीं चमूम् |
+व्यूढां द्रुपदपुत्रेण तव शिष्येण धीमता || ३ ||
+
+paśyaitāṁ pāṇḍuputrāṇāmācārya mahatīṁ camūm |
+vyūḍhāṁ drupadaputreṇa tava śiṣyeṇa dhīmatā || 3 ||
+
+O my teacher, behold the great army of the sons of Pandu, so expertly arrayed by your intelligent disciple, the son of Drupada.
+
+---
+
+Verse 4
+अत्र शूरा महेष्वासा भीमार्जुनसमा युधि |
+युयुधानो विराटश्च द्रुपदश्च महारथः || ४ ||
+
+atra śūrā maheṣvāsā bhīmārjunasamā yudhi |
+yuyudhāno virāṭaśca drupadaśca mahārathaḥ || 4 ||
+
+Here in this army are many heroic bowmen equal in fighting to Bhima and Arjuna: great fighters like Yuyudhana, Virata and Drupada.
+
+---
+
+Verse 5
+धृष्टकेतुश्चेकितानः काशिराजश्च वीर्यवान् |
+पुरुजित्कुन्तिभोजश्च शैब्यश्च नरपुङ्गवः || ५ ||
+
+dhṛṣṭaketuścekitānaḥ kāśirājaśca vīryavān |
+purujitkuntibhojaśca śaibyaśca narapuṅgavaḥ || 5 ||
+
+There are also great, heroic, powerful fighters like Dhrishtaketu, Cekitana, Kasiraja, Purujit, Kuntibhoja and Saibya.
+`;
 
 export default function SpiritualTextsPage() {
-  const initialState: ReligiousTextAnalysisState = {
-    translationAndExplanation: '',
-    error: '',
+  const user = useUser();
+  const userAvatar = getPlaceholderImage('user-avatar');
+  const formRef = useRef<HTMLFormElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const initialState: ScriptureChatState = {
+    history: [
+      {
+        role: 'model',
+        content: [
+          {
+            text: "Welcome to the Spiritual Texts study. I am here to help you understand the scripture. Feel free to ask me anything about the text you're reading.",
+          },
+        ],
+      },
+    ],
   };
-  const [state, dispatch] = useActionState(handleReligiousText, initialState);
+  const [state, dispatch, isPending] = useActionState(
+    handleScriptureChat,
+    initialState
+  );
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [state.history, isPending]);
 
   return (
-    <div className="flex flex-col gap-8">
-      <form action={dispatch}>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Spiritual Text Analysis</CardTitle>
-                <CardDescription>
-                  Enter a passage from a religious text to receive a translation
-                  and detailed explanation.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid w-full gap-2">
-                  <Label htmlFor="text-input">Text/Passage</Label>
-                  <Textarea
-                    id="text-input"
-                    name="text"
-                    placeholder="Paste the passage you want to understand..."
-                    className="min-h-[150px]"
-                    required
-                  />
-                </div>
-                <div className="grid w-full gap-2">
-                  <Label htmlFor="religious-context">
-                    Religion / Text Name
-                  </Label>
-                  <Input
-                    id="religious-context"
-                    name="religiousContext"
-                    placeholder="e.g., Hinduism, Bhagavad Gita, Christianity, Bible"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="source-language">Original Language</Label>
-                    <Select name="sourceLanguage" defaultValue="sanskrit">
-                      <SelectTrigger id="source-language">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {languages.map((lang) => (
-                          <SelectItem key={lang.value} value={lang.value}>
-                            {lang.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="target-language">
-                      Translate & Explain In
-                    </Label>
-                    <Select name="targetLanguage" defaultValue="english">
-                      <SelectTrigger id="target-language">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {languages.map((lang) => (
-                          <SelectItem key={lang.value} value={lang.value}>
-                            {lang.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <div className="mt-6 flex justify-start">
-              <SubmitButton
-                size="lg"
-                pendingContent={
-                  <>
-                    <LoaderCircle className="animate-spin" /> Analyzing...
-                  </>
-                }
-              >
-                Analyze Text <BookMarked />
-              </SubmitButton>
-            </div>
-          </div>
+    <div className="grid h-full max-h-[85vh] grid-cols-1 gap-8 lg:grid-cols-2">
+      <Card className="flex flex-col">
+        <CardHeader>
+          <CardTitle>Bhagavad Gita - Chapter 1</CardTitle>
+          <CardDescription>
+            Observe the armies on the battlefield of Kurukshetra.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-y-auto">
+          <ScrollArea className="h-full pr-4">
+            <p className="whitespace-pre-wrap font-code">{scriptureText}</p>
+          </ScrollArea>
+        </CardContent>
+      </Card>
 
-          <Card className="flex flex-col">
-            <CardHeader>
-              <CardTitle>Translation & Commentary</CardTitle>
-              <CardDescription>
-                AI-generated translation and explanation of the passage.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <div className="h-full min-h-[350px] overflow-auto rounded-md border bg-secondary p-4">
-                {state.error && (
-                  <Alert variant="destructive">
-                    <AlertTitle>Analysis Failed</AlertTitle>
-                    <AlertDescription>{state.error}</AlertDescription>
-                  </Alert>
-                )}
-                {state.translationAndExplanation ? (
+      <div className="flex h-full flex-col rounded-lg border bg-card text-card-foreground">
+        <CardHeader>
+          <CardTitle>Scripture Tutor</CardTitle>
+          <CardDescription>
+            Ask questions about the text to get explanations.
+          </CardDescription>
+        </CardHeader>
+        <div className="flex-1 overflow-y-auto">
+          <ScrollArea className="h-full p-4">
+            <div className="space-y-6">
+              {state.history.map((message, index) => (
+                <div
+                  key={index}
+                  className={cn(
+                    'flex items-start gap-4',
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  )}
+                >
+                  {message.role === 'model' && (
+                    <Avatar className="h-9 w-9 border">
+                      <AvatarFallback>
+                        <Bot />
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
                   <div
-                    className="prose prose-sm dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: state.translationAndExplanation,
-                    }}
-                  />
-                ) : (
-                  <p className="text-muted-foreground">
-                    Your analysis will appear here...
-                  </p>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+                    className={cn(
+                      'max-w-xl rounded-lg p-3 text-sm shadow-sm',
+                      message.role === 'user'
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted'
+                    )}
+                  >
+                    <p className="whitespace-pre-wrap">
+                      {message.content[0].text}
+                    </p>
+                  </div>
+                  {message.role === 'user' && user && (
+                    <Avatar className="h-9 w-9">
+                      {user.photoURL ? (
+                        <AvatarImage src={user.photoURL} alt="User Avatar" />
+                      ) : (
+                        userAvatar && (
+                          <AvatarImage
+                            src={userAvatar.imageUrl}
+                            alt="User Avatar"
+                            data-ai-hint={userAvatar.imageHint}
+                          />
+                        )
+                      )}
+                      <AvatarFallback>
+                        {user.displayName?.[0]?.toUpperCase() || 'U'}
+                      </AvatarFallback>
+                    </Avatar>
+                  )}
+                </div>
+              ))}
+              {isPending && (
+                <div className="flex items-start justify-start gap-4">
+                  <Avatar className="h-9 w-9 border">
+                    <AvatarFallback>
+                      <Bot />
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="max-w-xl rounded-lg bg-muted p-3 text-sm shadow-sm">
+                    <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
         </div>
-      </form>
+
+        <div className="border-t p-4">
+          <form
+            ref={formRef}
+            action={(formData) => {
+              if (formData.get('query')) {
+                dispatch(formData);
+                formRef.current?.reset();
+              }
+            }}
+            className="flex items-center gap-2"
+          >
+            <input
+              type="hidden"
+              name="scriptureContext"
+              value={scriptureText}
+            />
+            <Input
+              name="query"
+              placeholder="Ask about a verse or term..."
+              autoComplete="off"
+              disabled={isPending}
+              className="flex-1"
+            />
+            <Button type="submit" size="icon" disabled={isPending}>
+              <SendHorizonal className="h-5 w-5" />
+              <span className="sr-only">Send message</span>
+            </Button>
+          </form>
+        </div>
+      </div>
     </div>
   );
 }

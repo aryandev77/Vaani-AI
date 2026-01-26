@@ -35,7 +35,7 @@ export type ChatState = {
   error?: string;
 };
 
-export type ReligiousTextAnalysisState = {
-  translationAndExplanation?: string;
+export type ScriptureChatState = {
+  history: ChatHistoryItem[];
   error?: string;
 };

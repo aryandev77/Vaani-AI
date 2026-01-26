@@ -6,14 +6,14 @@ import type {
   EmotionState,
   ChatState,
   ChatHistoryItem,
-  ReligiousTextAnalysisState,
+  ScriptureChatState,
 } from './definitions';
 import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
 import { summarizeCulturalInsights } from '@/ai/flows/summarize-cultural-insights';
 import { detectAndPreserveEmotion } from '@/ai/flows/detect-and-preserve-emotion';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { chatWithBot } from '@/ai/flows/chatbot';
-import { analyzeReligiousText } from '@/ai/flows/religious-text-analysis';
+import { scriptureTutor } from '@/ai/flows/scripture-tutor';
 
 export async function handleTranslation(
   prevState: TranslationState,
@@ -143,32 +143,50 @@ export async function handleChat(
   }
 }
 
-export async function handleReligiousText(
-  prevState: ReligiousTextAnalysisState,
+export async function handleScriptureChat(
+  prevState: ScriptureChatState,
   formData: FormData
-): Promise<ReligiousTextAnalysisState> {
-  const text = formData.get('text') as string;
-  const sourceLanguage = formData.get('sourceLanguage') as string;
-  const targetLanguage = formData.get('targetLanguage') as string;
-  const religiousContext = formData.get('religiousContext') as string;
+): Promise<ScriptureChatState> {
+  const query = formData.get('query') as string;
+  const scriptureContext = formData.get('scriptureContext') as string;
+
+  if (!query?.trim()) {
+    return prevState;
+  }
+
+  const userMessage: ChatHistoryItem = {
+    role: 'user',
+    content: [{ text: query }],
+  };
+
+  const currentHistory = [...prevState.history, userMessage];
 
   try {
-    const result = await analyzeReligiousText({
-      text,
-      sourceLanguage,
-      targetLanguage,
-      religiousContext,
+    const result = await scriptureTutor({
+      query,
+      history: prevState.history,
+      scriptureContext,
     });
 
-    const combinedOutput = `## Translation\n\n${result.translation}\n\n<hr class="my-4">\n\n## Explanation\n\n${result.explanation}`;
+    const modelMessage: ChatHistoryItem = {
+      role: 'model',
+      content: [{ text: result.response }],
+    };
 
     return {
-      translationAndExplanation: combinedOutput,
+      history: [...currentHistory, modelMessage],
     };
   } catch (error) {
     console.error(error);
+    const errorMessage =
+      'Error: I had a problem responding. Please try again.';
+    const modelMessage: ChatHistoryItem = {
+      role: 'model',
+      content: [{ text: errorMessage }],
+    };
     return {
-      error: 'Error: Could not analyze the text.',
+      history: [...currentHistory, modelMessage],
+      error: errorMessage,
     };
   }
 }
