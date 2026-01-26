@@ -46,14 +46,8 @@ const scriptureTutorFlow = ai.defineFlow(
     outputSchema: ScriptureTutorOutputSchema,
   },
   async ({ query, history, scriptureContext }) => {
-    const systemPrompt = `You are a world-class expert in theology, comparative religion, and linguistics. You are assisting a user who is reading a religious text. Your task is to answer their questions about the text, providing translation, commentary, historical context, and philosophical meaning.
-
-The user is currently reading the following text:
----
-${scriptureContext}
----
-
-Be helpful, scholarly, and accessible. Use markdown for formatting to improve readability.`;
+    // A concise system prompt that sets the AI's role.
+    const systemPrompt = `You are a world-class expert in theology, comparative religion, and linguistics. You are assisting a user who is reading a religious text. Your task is to answer their questions about the text provided. Be helpful, scholarly, and accessible. Use markdown for formatting.`;
 
     const messages: (
       | ChatHistoryItem
@@ -65,12 +59,18 @@ Be helpful, scholarly, and accessible. Use markdown for formatting to improve re
       },
     ];
 
+    // The history from the action is clean, containing only user-facing messages.
     if (history) {
       messages.push(...history);
     }
+
+    // Combine the scripture context and the user's actual query into a single, comprehensive message for the AI.
+    // This is only for this specific API call and is not saved in the chat history state.
+    const userQueryWithContext = `Here is the text I am reading:\n\n---\n${scriptureContext}\n---\n\nHere is my question about it: ${query}`;
+
     messages.push({
       role: 'user',
-      content: [{ text: query }],
+      content: [{ text: userQueryWithContext }],
     });
 
     const response = await ai.generate({
