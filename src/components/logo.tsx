@@ -23,9 +23,9 @@ export function Logo({ className }: { className?: string }) {
         </defs>
         <rect width="28" height="28" rx="6" fill="url(#logoGradient)" />
         <path
-          d="M 6 9 L 10 17 Q 14 21 18 17 L 22 9"
+          d="M 5 9 C 9 9, 14 21, 19 9 L 23 9"
           stroke="hsl(var(--primary-foreground))"
-          strokeWidth="3"
+          strokeWidth="3.5"
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"
