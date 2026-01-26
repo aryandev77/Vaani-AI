@@ -8,7 +8,7 @@ import type { InsightState } from '@/lib/definitions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { SubmitButton } from '@/components/submit-button';
+import { SubmitButton } from '@/components/ui/submit-button';
 
 export default function LearningPage() {
   const initialState: InsightState = { culturalSummary: '' };
