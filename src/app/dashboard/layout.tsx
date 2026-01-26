@@ -43,10 +43,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const pageTitle = useMemo(() => {
     const pageTitles: { [key: string]: string } = {
-      '/dashboard': 'Real-Time Translation',
+      '/dashboard': 'AI Language Tutor',
+      '/dashboard/chatbot': 'Real-Time Translation',
       '/dashboard/learning': 'Learning Mode',
       '/dashboard/emotion': 'Emotion & Tone Preservation',
-      '/dashboard/chatbot': 'AI Language Tutor',
       '/dashboard/history': 'Conversation History',
       '/dashboard/about': 'About Vaani AI',
       '/dashboard/profile': 'Profile Settings',
@@ -80,12 +80,27 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <SidebarMenuButton
                   asChild
                   tooltip={{
-                    children: 'Translate',
+                    children: 'AI Tutor',
                     className: 'bg-primary text-primary-foreground',
                   }}
                   isActive={pathname === '/dashboard'}
                 >
                   <Link href="/dashboard">
+                    <MessageSquare />
+                    <span>AI Tutor</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Translate',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  isActive={pathname === '/dashboard/chatbot'}
+                >
+                  <Link href="/dashboard/chatbot">
                     <Languages />
                     <span>Translate</span>
                   </Link>
@@ -118,21 +133,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/emotion">
                     <Smile />
                     <span>Emotion Tool</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={{
-                    children: 'AI Tutor',
-                    className: 'bg-primary text-primary-foreground',
-                  }}
-                  isActive={pathname === '/dashboard/chatbot'}
-                >
-                  <Link href="/dashboard/chatbot">
-                    <MessageSquare />
-                    <span>AI Tutor</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
