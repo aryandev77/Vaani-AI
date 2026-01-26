@@ -16,7 +16,7 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 332.6 96.7% 55.1%;
+    --accent: 210 100% 56%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -52,7 +52,7 @@
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 332.6 96.7% 55.1%;
+    --accent: 210 100% 56%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
@@ -91,20 +91,20 @@
 
 @layer utilities {
   .v-path {
-    stroke-dasharray: 28;
-    stroke-dashoffset: 28;
+    stroke-dasharray: 27;
+    stroke-dashoffset: 27;
     animation: draw-v 1.5s ease-in-out infinite;
   }
 
   @keyframes draw-v {
     0% {
-      stroke-dashoffset: 28;
+      stroke-dashoffset: 27;
     }
     50% {
       stroke-dashoffset: 0;
     }
     100% {
-      stroke-dashoffset: -28;
+      stroke-dashoffset: -27;
     }
   }
 
