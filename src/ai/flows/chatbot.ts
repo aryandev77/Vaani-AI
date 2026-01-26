@@ -70,7 +70,7 @@ const chatBotFlow = ai.defineFlow(
 
     const response = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
-      prompt: messages as any, // Cast to any to satisfy the complex prompt type
+      messages: messages as any, // Cast to any to satisfy the complex prompt type
       config: {
         safetySettings: [
           { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },

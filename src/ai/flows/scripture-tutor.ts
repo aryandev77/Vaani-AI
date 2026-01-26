@@ -75,7 +75,7 @@ Be helpful, scholarly, and accessible. Use markdown for formatting to improve re
 
     const response = await ai.generate({
       model: 'googleai/gemini-2.5-flash',
-      prompt: messages as any,
+      messages: messages as any,
       config: {
         safetySettings: [
           { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
