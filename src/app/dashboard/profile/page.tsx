@@ -24,6 +24,7 @@ import {
   PieChart as PieChartIcon,
   User as UserIcon,
   Lock,
+  BookUser,
 } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Pie, PieChart, XAxis, Cell } from 'recharts';
 
@@ -132,7 +133,7 @@ function NavButton({ icon, label, isActive, onClick }: NavButtonProps) {
       variant="ghost"
       onClick={onClick}
       className={cn(
-        'w-full justify-start',
+        'w-full justify-start gap-2',
         isActive && 'bg-accent text-accent-foreground'
       )}
     >
@@ -310,6 +311,12 @@ export default function ProfilePage() {
             isActive={activeTab === 'profile'}
             onClick={() => setActiveTab('profile')}
           />
+          <Button asChild variant="ghost" className="w-full justify-start gap-2">
+            <Link href="/dashboard/profile-setup">
+              <BookUser />
+              Detailed Profile
+            </Link>
+          </Button>
           <NavButton
             icon={<Lock />}
             label="Password"
@@ -328,106 +335,82 @@ export default function ProfilePage() {
       <main className="md:col-span-3">
         <div className="space-y-8">
           {activeTab === 'profile' && (
-            <>
-              <Card>
-                <CardHeader>
-                  <CardTitle>Your Profile</CardTitle>
-                  <CardDescription>
-                    Manage your account details and preferences.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-8">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-20 w-20">
-                      {user?.photoURL ? (
-                        <AvatarImage src={user.photoURL} alt="User Avatar" />
-                      ) : (
-                        userAvatar && (
-                          <AvatarImage
-                            src={userAvatar.imageUrl}
-                            alt="User Avatar"
-                            data-ai-hint={userAvatar.imageHint}
-                          />
-                        )
-                      )}
-                      <AvatarFallback>
-                        {displayName?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col gap-2">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={handlePhotoUpload}
-                        className="hidden"
-                        accept="image/png, image/jpeg, image/gif"
+            <Card>
+              <CardHeader>
+                <CardTitle>Your Profile</CardTitle>
+                <CardDescription>
+                  Manage your account details and preferences.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                <div className="flex items-center gap-6">
+                  <Avatar className="h-20 w-20">
+                    {user?.photoURL ? (
+                      <AvatarImage src={user.photoURL} alt="User Avatar" />
+                    ) : (
+                      userAvatar && (
+                        <AvatarImage
+                          src={userAvatar.imageUrl}
+                          alt="User Avatar"
+                          data-ai-hint={userAvatar.imageHint}
+                        />
+                      )
+                    )}
+                    <AvatarFallback>
+                      {displayName?.[0]?.toUpperCase() || 'U'}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handlePhotoUpload}
+                      className="hidden"
+                      accept="image/png, image/jpeg, image/gif"
+                    />
+                    <Button
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={uploading}
+                    >
+                      {uploading ? 'Uploading...' : 'Change Photo'}
+                    </Button>
+                    {uploading ? (
+                      <div className="flex w-32 items-center gap-2">
+                        <Progress value={uploadProgress} className="w-full" />
+                        <span className="text-sm text-muted-foreground">
+                          {Math.round(uploadProgress)}%
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        JPG, GIF or PNG. 1MB max.
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <Separator />
+                <form className="space-y-6" onSubmit={handleProfileUpdate}>
+                  <div className="grid gap-2 md:grid-cols-2 md:gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="full-name">Full Name</Label>
+                      <Input
+                        id="full-name"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder="Your name"
                       />
-                      <Button
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploading}
-                      >
-                        {uploading ? 'Uploading...' : 'Change Photo'}
-                      </Button>
-                      {uploading ? (
-                        <div className="flex w-32 items-center gap-2">
-                          <Progress value={uploadProgress} className="w-full" />
-                          <span className="text-sm text-muted-foreground">
-                            {Math.round(uploadProgress)}%
-                          </span>
-                        </div>
-                      ) : (
-                        <p className="text-sm text-muted-foreground">
-                          JPG, GIF or PNG. 1MB max.
-                        </p>
-                      )}
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input id="email" type="email" value={email} disabled />
                     </div>
                   </div>
-                  <Separator />
-                  <form className="space-y-6" onSubmit={handleProfileUpdate}>
-                    <div className="grid gap-2 md:grid-cols-2 md:gap-4">
-                      <div className="grid gap-2">
-                        <Label htmlFor="full-name">Full Name</Label>
-                        <Input
-                          id="full-name"
-                          value={displayName}
-                          onChange={(e) => setDisplayName(e.target.value)}
-                          placeholder="Your name"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" value={email} disabled />
-                      </div>
-                    </div>
-                    <div className="flex justify-start">
-                      <Button type="submit">Save Changes</Button>
-                    </div>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Detailed Profile</CardTitle>
-                  <CardDescription>
-                    Enhance your translation experience by providing more details.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground">
-                    This information helps Vaani AI provide more accurate and culturally
-                    relevant translations and insights tailored specifically to you.
-                  </p>
-                </CardContent>
-                <CardFooter>
-                  <Button asChild>
-                    <Link href="/dashboard/profile-setup">
-                      Set Up Detailed Profile
-                    </Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </>
+                  <div className="flex justify-start">
+                    <Button type="submit">Save Changes</Button>
+                  </div>
+                </form>
+              </CardContent>
+            </Card>
           )}
 
           {activeTab === 'password' && (
