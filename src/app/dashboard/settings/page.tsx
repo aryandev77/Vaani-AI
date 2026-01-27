@@ -7,13 +7,23 @@ import {
   reauthenticateWithCredential,
   updatePassword,
   updateProfile,
+  deleteUser,
 } from 'firebase/auth';
 import {
   ref as storageRef,
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
-import { KeyRound, UserX, BookUser } from 'lucide-react';
+import {
+  KeyRound,
+  UserX,
+  BookUser,
+  Sun,
+  Moon,
+  Laptop,
+  Trash2,
+} from 'lucide-react';
+import { useTheme } from 'next-themes';
 
 import { useAuth, useUser, useStorage } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -34,19 +44,33 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingIndicator } from '@/components/loading-indicator';
+import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const user = useUser();
   const auth = useAuth();
   const storage = useStorage();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
   const userAvatar = getPlaceholderImage('user-avatar');
 
   const [displayName, setDisplayName] = useState('');
@@ -185,6 +209,28 @@ export default function SettingsPage() {
     setSecretCode('');
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    // Note: Deleting user data from Firestore is not handled here.
+    // That would require a Cloud Function for security and completeness.
+    try {
+      await deleteUser(user);
+      toast({
+        title: 'Account Deleted',
+        description: 'Your account has been permanently deleted.',
+      });
+    } catch (error: any) {
+      console.error('Account deletion error:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Deletion Failed',
+        description:
+          'This operation is sensitive and requires recent login. Please log out and log back in before trying again.',
+      });
+    }
+  };
+
   if (loadingUser) {
     return (
       <div className="flex h-[400px] w-full items-center justify-center">
@@ -294,6 +340,37 @@ export default function SettingsPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Appearance</CardTitle>
+          <CardDescription>
+            Customize the look and feel of the app.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs
+            defaultValue={theme}
+            onValueChange={setTheme}
+            className="w-full"
+          >
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="light">
+                <Sun className="mr-2" />
+                Light
+              </TabsTrigger>
+              <TabsTrigger value="dark">
+                <Moon className="mr-2" />
+                Dark
+              </TabsTrigger>
+              <TabsTrigger value="system">
+                <Laptop className="mr-2" />
+                System
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Password</CardTitle>
           <CardDescription>
             Manage your password settings. Requires your current password.
@@ -383,6 +460,46 @@ export default function SettingsPage() {
               </DialogContent>
             </Dialog>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-destructive">
+        <CardHeader>
+          <CardTitle>Danger Zone</CardTitle>
+          <CardDescription>
+            These actions are irreversible. Please proceed with caution.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive">
+                <Trash2 className="mr-2" />
+                Delete Account
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This action cannot be undone. This will permanently delete
+                  your account and remove your data from our servers.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction
+                  className={cn(
+                    buttonVariants({ variant: 'destructive' }),
+                    'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                  )}
+                  onClick={handleDeleteAccount}
+                >
+                  Yes, delete my account
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
     </div>
