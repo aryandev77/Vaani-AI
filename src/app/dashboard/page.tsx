@@ -10,7 +10,6 @@ import {
   Upload,
   Video,
   Mic,
-  Quote,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -25,7 +24,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogoIcon } from '@/components/logo-icon';
 import {
   Dialog,
@@ -37,38 +35,6 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import { Badge } from '@/components/ui/badge';
-
-const phraseOfTheDay = {
-  phrase: 'Bite the bullet',
-  meaning:
-    'To face a difficult or unpleasant situation with courage and determination.',
-  story:
-    'This idiom is believed to have originated in the 18th century, before the widespread use of anesthesia. During battlefield surgery, wounded soldiers were given a lead bullet to bite down on to cope with the excruciating pain.',
-  translations: [
-    {
-      lang: 'Hindi',
-      text: 'कठिनाई का हिम्मत से सामना करना',
-      emotion: 'Determined',
-    },
-    {
-      lang: 'Spanish',
-      text: 'Hacer de tripas corazón',
-      emotion: 'Resolute',
-    },
-    {
-      lang: 'Japanese',
-      text: '歯を食いしばる (Ha o kuishibaru)',
-      emotion: 'Gritty',
-    },
-  ],
-};
 
 export default function DashboardPage() {
   const user = useUser();
@@ -103,7 +69,7 @@ export default function DashboardPage() {
         role: 'model',
         content: [
           {
-            text: "Hello! I'm Vaani. Check out the 'Phrase of the Day' above, or ask me anything you'd like about languages, idioms, or culture!",
+            text: "Hello! I'm Vaani. Click the quote icon above to see the 'Phrase of the Day', or ask me anything you'd like!",
           },
         ],
       },
@@ -213,56 +179,6 @@ export default function DashboardPage() {
     <div className="flex h-full flex-col">
       <ScrollArea className="flex-1">
         <div className="mx-auto max-w-3xl space-y-6 p-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 font-headline">
-                <Quote /> Phrase of the Day
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Accordion type="single" collapsible>
-                <AccordionItem value="item-1">
-                  <AccordionTrigger>
-                    <div className="text-left">
-                      <p className="text-xl font-semibold">
-                        {phraseOfTheDay.phrase}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        {phraseOfTheDay.meaning}
-                      </p>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="space-y-4 pt-2">
-                    <div>
-                      <h4 className="font-semibold">Origin Story</h4>
-                      <p className="text-muted-foreground">
-                        {phraseOfTheDay.story}
-                      </p>
-                    </div>
-                    <div>
-                      <h4 className="font-semibold">Emotional Translations</h4>
-                      <div className="mt-2 space-y-2">
-                        {phraseOfTheDay.translations.map(t => (
-                          <div
-                            key={t.lang}
-                            className="flex items-center justify-between rounded-md bg-secondary p-2"
-                          >
-                            <div>
-                              <p className="font-medium">
-                                {t.lang}: "{t.text}"
-                              </p>
-                            </div>
-                            <Badge variant="outline">{t.emotion}</Badge>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
-          </Card>
-
           {state.history.map((message, index) => (
             <div
               key={index}
@@ -494,5 +410,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

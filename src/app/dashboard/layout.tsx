@@ -16,6 +16,7 @@ import {
   Settings,
   CreditCard,
   Phone,
+  Quote,
 } from 'lucide-react';
 
 import {
@@ -33,6 +34,50 @@ import { UserNav } from '@/components/user-nav';
 import { Logo } from '@/components/logo';
 import { useUser } from '@/firebase';
 import { FullScreenLoader } from '@/components/full-screen-loader';
+import {
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+
+const phraseOfTheDay = {
+  phrase: 'Bite the bullet',
+  meaning:
+    'To face a difficult or unpleasant situation with courage and determination.',
+  story:
+    'This idiom is believed to have originated in the 18th century, before the widespread use of anesthesia. During battlefield surgery, wounded soldiers were given a lead bullet to bite down on to cope with the excruciating pain.',
+  translations: [
+    {
+      lang: 'Hindi',
+      text: 'कठिनाई का हिम्मत से सामना करना',
+      emotion: 'Determined',
+    },
+    {
+      lang: 'Spanish',
+      text: 'Hacer de tripas corazón',
+      emotion: 'Resolute',
+    },
+    {
+      lang: 'Japanese',
+      text: '歯を食いしばる (Ha o kuishibaru)',
+      emotion: 'Gritty',
+    },
+  ],
+};
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const user = useUser();
@@ -114,7 +159,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-               <SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   tooltip={{
@@ -226,7 +271,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-                 <SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   tooltip={{
@@ -242,7 +287,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-               <SidebarMenuItem>
+              <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
                   tooltip={{
@@ -265,10 +310,80 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <div className="flex h-full flex-col">
             <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
               <SidebarTrigger className="md:hidden" />
-              <div className="flex-1">
+              <div className="flex flex-1 items-center gap-2">
                 <h1 className="text-xl font-semibold font-headline">
                   {pageTitle}
                 </h1>
+                {pathname === '/dashboard' && (
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        aria-label="Show Phrase of the Day"
+                      >
+                        <Quote className="h-5 w-5" />
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="p-0">
+                      <Card className="border-0 shadow-none">
+                        <CardHeader>
+                          <CardTitle className="flex items-center gap-2 font-headline">
+                            <Quote /> Phrase of the Day
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <Accordion type="single" collapsible>
+                            <AccordionItem value="item-1">
+                              <AccordionTrigger>
+                                <div className="text-left">
+                                  <p className="text-xl font-semibold">
+                                    {phraseOfTheDay.phrase}
+                                  </p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {phraseOfTheDay.meaning}
+                                  </p>
+                                </div>
+                              </AccordionTrigger>
+                              <AccordionContent className="space-y-4 pt-2">
+                                <div>
+                                  <h4 className="font-semibold">
+                                    Origin Story
+                                  </h4>
+                                  <p className="text-muted-foreground">
+                                    {phraseOfTheDay.story}
+                                  </p>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold">
+                                    Emotional Translations
+                                  </h4>
+                                  <div className="mt-2 space-y-2">
+                                    {phraseOfTheDay.translations.map(t => (
+                                      <div
+                                        key={t.lang}
+                                        className="flex items-center justify-between rounded-md bg-secondary p-2"
+                                      >
+                                        <div>
+                                          <p className="font-medium">
+                                            {t.lang}: "{t.text}"
+                                          </p>
+                                        </div>
+                                        <Badge variant="outline">
+                                          {t.emotion}
+                                        </Badge>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </AccordionContent>
+                            </AccordionItem>
+                          </Accordion>
+                        </CardContent>
+                      </Card>
+                    </DialogContent>
+                  </Dialog>
+                )}
               </div>
               <UserNav />
             </header>
