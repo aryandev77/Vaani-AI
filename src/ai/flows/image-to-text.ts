@@ -10,7 +10,7 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 
-export const ImageToTextInputSchema = z.object({
+const ImageToTextInputSchema = z.object({
   imageDataUri: z
     .string()
     .describe(
@@ -19,7 +19,7 @@ export const ImageToTextInputSchema = z.object({
 });
 export type ImageToTextInput = z.infer<typeof ImageToTextInputSchema>;
 
-export const ImageToTextOutputSchema = z.object({
+const ImageToTextOutputSchema = z.object({
   text: z.string().describe('The text extracted from the image.'),
 });
 export type ImageToTextOutput = z.infer<typeof ImageToTextOutputSchema>;
