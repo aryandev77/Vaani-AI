@@ -24,6 +24,9 @@ import {
   Trash2,
   User,
   Palette,
+  CreditCard,
+  Send,
+  X,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -89,7 +92,37 @@ export default function SettingsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loadingUser, setLoadingUser] = useState(true);
 
+  const [selectedPlan, setSelectedPlan] = useState('monthly');
+
   const ADMIN_SECRET_CODE = 'VAANI_FOUNDER_777';
+
+  const plans = [
+    {
+      id: 'weekly',
+      duration: '1',
+      unit: 'Week',
+      price: '$4.99',
+      pricePer: '$4.99/week',
+      badge: 'New',
+    },
+    {
+      id: 'monthly',
+      duration: '1',
+      unit: 'Month',
+      price: '$9.99',
+      badge: '-54%',
+      pricePer: '$2.31/week',
+    },
+    {
+      id: 'yearly',
+      duration: '6',
+      unit: 'Months',
+      price: '$34.99',
+      badge: 'Most Popular',
+      pricePer: '$1.35/week',
+      discount: '-75%',
+    },
+  ];
 
   useEffect(() => {
     if (user) {
@@ -257,7 +290,7 @@ export default function SettingsPage() {
 
   return (
     <Tabs defaultValue="account" className="mx-auto max-w-2xl">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="account">
           <User className="mr-2" />
           Account
@@ -269,6 +302,10 @@ export default function SettingsPage() {
         <TabsTrigger value="security">
           <KeyRound className="mr-2" />
           Security
+        </TabsTrigger>
+        <TabsTrigger value="billing">
+          <CreditCard className="mr-2" />
+          Billing
         </TabsTrigger>
         <TabsTrigger value="danger">
           <Trash2 className="mr-2 text-destructive/80" />
@@ -487,6 +524,112 @@ export default function SettingsPage() {
             )}
           </CardContent>
         </Card>
+      </TabsContent>
+
+      <TabsContent value="billing" className="mt-6">
+        <div className="relative overflow-hidden rounded-lg bg-black p-6 text-white">
+          <div className="absolute inset-x-0 bottom-0 h-2/3 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-purple-900/50 to-transparent" />
+          <div className="relative z-10 mx-auto flex max-w-sm flex-col items-center text-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute -right-2 -top-2 text-zinc-400 hover:bg-white/10 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </Button>
+
+            <div className="flex items-center gap-2 text-xl font-bold">
+              Vaani AI Fastpass
+            </div>
+
+            <Send className="my-4 -rotate-45 text-4xl" />
+
+            <h2 className="text-xl font-bold">3 SuperFeels/week</h2>
+            <p className="mt-1 max-w-xs text-sm text-zinc-400">
+              You loved a profile? Stand out with a priority message!
+            </p>
+
+            <div className="my-6 flex items-center justify-center gap-1.5">
+              <div className="h-1.5 w-1.5 rounded-full bg-zinc-600"></div>
+              <div className="h-1.5 w-1.5 rounded-full bg-white"></div>
+              <div className="h-1.5 w-1.5 rounded-full bg-zinc-600"></div>
+              <div className="h-1.5 w-1.5 rounded-full bg-zinc-600"></div>
+            </div>
+
+            <div className="grid w-full grid-cols-3 items-end gap-2">
+              {/* Plan 1 */}
+              <div
+                onClick={() => setSelectedPlan('weekly')}
+                className="relative cursor-pointer"
+              >
+                <div className="rounded-xl bg-zinc-800 p-4">
+                  <p className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-zinc-700 px-2 text-xs font-semibold">
+                    New
+                  </p>
+                  <p className="text-2xl font-bold">{plans[0].duration}</p>
+                  <p className="text-sm text-zinc-400">{plans[0].unit}</p>
+                </div>
+                <p className="mt-2 text-xs text-zinc-400">
+                  {plans[0].pricePer}
+                </p>
+                <p className="text-sm font-bold">{plans[0].price}</p>
+              </div>
+              {/* Plan 2 - Highlighted */}
+              <div
+                onClick={() => setSelectedPlan('monthly')}
+                className="relative cursor-pointer"
+              >
+                <div
+                  className={cn(
+                    'rounded-xl border-2 border-purple-500 bg-zinc-800 p-4 shadow-[0_0_20px_theme(colors.purple.500)]'
+                  )}
+                >
+                  <p className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-purple-600 px-2 text-xs font-semibold">
+                    {plans[1].badge}
+                  </p>
+                  <p className="text-3xl font-bold">{plans[1].duration}</p>
+                  <p className="text-base text-zinc-400">{plans[1].unit}</p>
+                  <p className="mt-1 text-xs text-zinc-400">
+                    {plans[1].pricePer}
+                  </p>
+                </div>
+                <p className="mt-2 text-sm font-bold">{plans[1].price}</p>
+              </div>
+              {/* Plan 3 */}
+              <div
+                onClick={() => setSelectedPlan('yearly')}
+                className="relative cursor-pointer"
+              >
+                <div className="rounded-xl bg-zinc-800 p-4">
+                  <p className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full bg-zinc-700 px-2 text-xs font-semibold">
+                    {plans[2].badge}
+                  </p>
+                  <p className="text-2xl font-bold">{plans[2].duration}</p>
+                  <p className="text-sm text-zinc-400">{plans[2].unit}</p>
+                  <p className="text-xs text-purple-400">{plans[2].discount}</p>
+                </div>
+                <p className="mt-2 text-xs text-zinc-400">
+                  {plans[2].pricePer}
+                </p>
+                <p className="text-sm font-bold">{plans[2].price}</p>
+              </div>
+            </div>
+
+            <Button
+              size="lg"
+              className="mt-8 w-full rounded-full bg-white text-black hover:bg-zinc-200"
+            >
+              Continue
+            </Button>
+            <p className="mt-4 max-w-xs text-center text-[10px] text-zinc-500">
+              Recurring billing. Cancel anytime. By tapping Continue you agree to
+              our{' '}
+              <Link href="#" className="underline">
+                Terms of Service
+              </Link>
+            </p>
+          </div>
+        </div>
       </TabsContent>
 
       <TabsContent value="danger" className="mt-6">

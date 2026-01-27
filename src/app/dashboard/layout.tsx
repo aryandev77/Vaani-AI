@@ -189,21 +189,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <SidebarMenuButton
                   asChild
                   tooltip={{
-                    children: 'Billing',
-                    className: 'bg-primary text-primary-foreground',
-                  }}
-                  isActive={pathname === '/dashboard/billing'}
-                >
-                  <Link href="/dashboard/billing">
-                    <CreditCard />
-                    <span>Billing</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={{
                     children: 'About',
                     className: 'bg-primary text-primary-foreground',
                   }}
