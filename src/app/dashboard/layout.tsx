@@ -15,6 +15,7 @@ import {
   BookMarked,
   Settings,
   CreditCard,
+  Phone,
 } from 'lucide-react';
 
 import {
@@ -48,6 +49,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const pageTitles: { [key: string]: string } = {
       '/dashboard': 'AI Language Tutor',
       '/dashboard/chatbot': 'Real-Time Translation',
+      '/dashboard/live-call': 'Live Call Translation',
       '/dashboard/learning': 'Learning Mode',
       '/dashboard/emotion': 'Emotion & Tone Preservation',
       '/dashboard/history': 'Conversation History',
@@ -109,6 +111,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/chatbot">
                     <Languages />
                     <span>Translate</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Live Call',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  size="lg"
+                  isActive={pathname === '/dashboard/live-call'}
+                >
+                  <Link href="/dashboard/live-call">
+                    <Phone />
+                    <span>Live Call</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

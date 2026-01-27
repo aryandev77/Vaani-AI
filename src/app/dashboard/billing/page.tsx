@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Check, Crown, Lock, ArrowRight, X } from 'lucide-react';
+import { Check, Crown, Lock, ArrowRight, X, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
@@ -68,6 +68,10 @@ export default function BillingPage() {
               <Crown className="h-4 w-4" />
             </div>
             <ul className="space-y-3">
+              <li className="flex items-center gap-3">
+                <Check className="h-5 w-5 text-green-400" />
+                <span>Live Call & Video Translation</span>
+              </li>
               <li className="flex items-center gap-3">
                 <Check className="h-5 w-5 text-green-400" />
                 <span>Unlimited Translations</span>
