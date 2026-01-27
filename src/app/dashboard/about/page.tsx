@@ -1,6 +1,5 @@
 'use client';
 
-import { useState, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -10,34 +9,13 @@ import {
 } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
-import { useUser } from '@/firebase';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AboutPage() {
   const founderAvatar = getPlaceholderImage('founder-avatar');
-  const user = useUser();
-  const [isFounder, setIsFounder] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const adminStatus = localStorage.getItem('isAdmin');
-      if (adminStatus === 'true') {
-        setIsFounder(true);
-      }
-      setLoading(false);
-    }
-  }, []);
-
-  const founderName =
-    isFounder && user?.displayName ? user.displayName : 'Aryan Pal';
-  const founderAvatarUrl =
-    isFounder && user?.photoURL ? user.photoURL : founderAvatar?.imageUrl;
-  const founderAvatarFallback =
-    (isFounder && user?.displayName
-      ? user.displayName[0]
-      : 'A'
-    )?.toUpperCase() || 'A';
+  const founderName = 'Aryan Pal';
+  const founderAvatarUrl = founderAvatar?.imageUrl;
+  const founderAvatarFallback = 'A';
 
   return (
     <div className="flex flex-col gap-8">
@@ -67,31 +45,25 @@ export default function AboutPage() {
         <CardHeader>
           <CardTitle>The Founder</CardTitle>
         </CardHeader>
-        <CardContent className="flex items-center gap-4">
-          {loading ? (
-            <>
-              <Skeleton className="h-20 w-20 rounded-full" />
-              <div className="space-y-2">
-                <Skeleton className="h-6 w-32" />
-                <Skeleton className="h-4 w-48" />
-              </div>
-            </>
-          ) : (
-            <>
-              <Avatar className="h-20 w-20">
-                {founderAvatarUrl && (
-                  <AvatarImage src={founderAvatarUrl} alt="Founder Avatar" />
-                )}
-                <AvatarFallback>{founderAvatarFallback}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-lg font-semibold">{founderName}</p>
-                <p className="text-sm text-muted-foreground">
-                  Founder & Visionary behind Vaani AI.
-                </p>
-              </div>
-            </>
-          )}
+        <CardContent className="flex flex-col items-start gap-4 md:flex-row md:items-center">
+          <Avatar className="h-24 w-24">
+            {founderAvatarUrl && (
+              <AvatarImage src={founderAvatarUrl} alt="Founder Avatar" />
+            )}
+            <AvatarFallback className="text-3xl">
+              {founderAvatarFallback}
+            </AvatarFallback>
+          </Avatar>
+          <div className="space-y-2">
+            <p className="text-2xl font-bold">{founderName}</p>
+            <p className="text-muted-foreground">
+              Aryan Pal, the visionary founder of Vaani AI, conceptualized this
+              platform with the goal of bridging global communication gaps.
+              Driven by a passion for technology and cross-cultural connection,
+              Aryan leads the mission to create a world where language is no
+              longer a barrier, but a bridge to understanding.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

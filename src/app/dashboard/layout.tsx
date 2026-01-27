@@ -18,6 +18,7 @@ import {
   Phone,
   Quote,
   Voicemail,
+  HelpCircle,
 } from 'lucide-react';
 
 import {
@@ -106,6 +107,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard/game': 'Language Games',
       '/dashboard/spiritual-texts': 'Spiritual Texts',
       '/dashboard/billing': 'Billing & Subscriptions',
+      '/dashboard/tutorial': 'App Tutorial',
     };
     return pageTitles[pathname] || 'Dashboard';
   }, [pathname]);
@@ -286,6 +288,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/about">
                     <Info />
                     <span>About</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Tutorial',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  size="lg"
+                  isActive={pathname === '/dashboard/tutorial'}
+                >
+                  <Link href="/dashboard/tutorial">
+                    <HelpCircle />
+                    <span>Tutorial</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
