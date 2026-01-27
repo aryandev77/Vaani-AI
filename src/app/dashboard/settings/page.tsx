@@ -22,12 +22,14 @@ import {
   Moon,
   Laptop,
   Trash2,
+  User,
+  Palette,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
 import { useAuth, useUser, useStorage } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -59,7 +61,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingIndicator } from '@/components/loading-indicator';
@@ -254,254 +256,280 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl space-y-8">
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Settings</CardTitle>
-          <CardDescription>
-            Manage your account details and preferences.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-8">
-          <div className="flex items-center gap-6">
-            <Avatar className="h-20 w-20">
-              {user?.photoURL ? (
-                <AvatarImage src={user.photoURL} alt="User Avatar" />
-              ) : (
-                userAvatar && (
-                  <AvatarImage
-                    src={userAvatar.imageUrl}
-                    alt="User Avatar"
-                    data-ai-hint={userAvatar.imageHint}
-                  />
-                )
-              )}
-              <AvatarFallback>
-                {displayName?.[0]?.toUpperCase() || 'U'}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col gap-2">
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handlePhotoUpload}
-                className="hidden"
-                accept="image/png, image/jpeg, image/gif"
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-              >
-                {uploading ? 'Uploading...' : 'Change Photo'}
-              </Button>
-              {uploading ? (
-                <div className="flex w-32 items-center gap-2">
-                  <Progress value={uploadProgress} className="w-full" />
-                  <span className="text-sm text-muted-foreground">
-                    {Math.round(uploadProgress)}%
-                  </span>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  JPG, GIF or PNG. 1MB max.
-                </p>
-              )}
-            </div>
-          </div>
-          <Separator />
-          <form className="space-y-6" onSubmit={handleProfileUpdate}>
-            <div className="grid gap-2 md:grid-cols-2 md:gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="full-name">Full Name</Label>
-                <Input
-                  id="full-name"
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                  placeholder="Your name"
+    <Tabs defaultValue="account" className="mx-auto max-w-2xl">
+      <TabsList className="grid w-full grid-cols-4">
+        <TabsTrigger value="account">
+          <User className="mr-2" />
+          Account
+        </TabsTrigger>
+        <TabsTrigger value="appearance">
+          <Palette className="mr-2" />
+          Appearance
+        </TabsTrigger>
+        <TabsTrigger value="security">
+          <KeyRound className="mr-2" />
+          Security
+        </TabsTrigger>
+        <TabsTrigger value="danger">
+          <Trash2 className="mr-2 text-destructive/80" />
+          Danger Zone
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="account" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Account Settings</CardTitle>
+            <CardDescription>
+              Manage your account details and preferences.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-8">
+            <div className="flex items-center gap-6">
+              <Avatar className="h-20 w-20">
+                {user?.photoURL ? (
+                  <AvatarImage src={user.photoURL} alt="User Avatar" />
+                ) : (
+                  userAvatar && (
+                    <AvatarImage
+                      src={userAvatar.imageUrl}
+                      alt="User Avatar"
+                      data-ai-hint={userAvatar.imageHint}
+                    />
+                  )
+                )}
+                <AvatarFallback>
+                  {displayName?.[0]?.toUpperCase() || 'U'}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  accept="image/png, image/jpeg, image/gif"
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" value={email} disabled />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <Button type="submit">Save Changes</Button>
-              <Button asChild variant="outline">
-                <Link href="/dashboard/profile-setup">
-                  <BookUser className="mr-2 h-4 w-4" />
-                  Edit Detailed Profile
-                </Link>
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Appearance</CardTitle>
-          <CardDescription>
-            Customize the look and feel of the app.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs
-            defaultValue={theme}
-            onValueChange={setTheme}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="light">
-                <Sun className="mr-2" />
-                Light
-              </TabsTrigger>
-              <TabsTrigger value="dark">
-                <Moon className="mr-2" />
-                Dark
-              </TabsTrigger>
-              <TabsTrigger value="system">
-                <Laptop className="mr-2" />
-                System
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Password</CardTitle>
-          <CardDescription>
-            Manage your password settings. Requires your current password.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-6" onSubmit={handlePasswordUpdate}>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="current-password">Current Password</Label>
-                <Input
-                  id="current-password"
-                  type="password"
-                  value={currentPassword}
-                  onChange={e => setCurrentPassword(e.target.value)}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="new-password">New Password</Label>
-                <Input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                />
-              </div>
-            </div>
-            <div className="flex justify-start">
-              <Button type="submit">Update Password</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Founder Access</CardTitle>
-          <CardDescription>
-            Unlock special administrative features for founders.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isAdmin ? (
-            <div className="flex items-center gap-3 rounded-lg border border-green-800 bg-green-900/30 p-4">
-              <KeyRound className="h-6 w-6 shrink-0 text-green-400" />
-              <div>
-                <h4 className="font-semibold text-green-300">
-                  Founder Mode Active
-                </h4>
-                <p className="text-sm text-muted-foreground">
-                  You can now see special features across the app.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button variant="outline">
-                  <KeyRound className="mr-2 h-4 w-4" />
-                  Unlock Founder Features
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Founder Access</DialogTitle>
-                  <DialogDescription>
-                    Enter the secret code to unlock special features.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <Label htmlFor="secret-code" className="sr-only">
-                    Secret Code
-                  </Label>
-                  <Input
-                    id="secret-code"
-                    type="password"
-                    value={secretCode}
-                    onChange={e => setSecretCode(e.target.value)}
-                    placeholder="Enter secret code..."
-                    autoComplete="one-time-code"
-                    onKeyDown={e => e.key === 'Enter' && handleAdminUnlock()}
-                  />
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleAdminUnlock}>Unlock Features</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card className="border-destructive">
-        <CardHeader>
-          <CardTitle>Danger Zone</CardTitle>
-          <CardDescription>
-            These actions are irreversible. Please proceed with caution.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive">
-                <Trash2 className="mr-2" />
-                Delete Account
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This action cannot be undone. This will permanently delete
-                  your account and remove your data from our servers.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className={cn(
-                    buttonVariants({ variant: 'destructive' }),
-                    'bg-destructive text-destructive-foreground hover:bg-destructive/90'
-                  )}
-                  onClick={handleDeleteAccount}
+                <Button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploading}
                 >
-                  Yes, delete my account
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </CardContent>
-      </Card>
-    </div>
+                  {uploading ? 'Uploading...' : 'Change Photo'}
+                </Button>
+                {uploading ? (
+                  <div className="flex w-32 items-center gap-2">
+                    <Progress value={uploadProgress} className="w-full" />
+                    <span className="text-sm text-muted-foreground">
+                      {Math.round(uploadProgress)}%
+                    </span>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    JPG, GIF or PNG. 1MB max.
+                  </p>
+                )}
+              </div>
+            </div>
+            <Separator />
+            <form className="space-y-6" onSubmit={handleProfileUpdate}>
+              <div className="grid gap-2 md:grid-cols-2 md:gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="full-name">Full Name</Label>
+                  <Input
+                    id="full-name"
+                    value={displayName}
+                    onChange={e => setDisplayName(e.target.value)}
+                    placeholder="Your name"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input id="email" type="email" value={email} disabled />
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <Button type="submit">Save Changes</Button>
+                <Button asChild variant="outline">
+                  <Link href="/dashboard/profile-setup">
+                    <BookUser className="mr-2 h-4 w-4" />
+                    Edit Detailed Profile
+                  </Link>
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="appearance" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Appearance</CardTitle>
+            <CardDescription>
+              Customize the look and feel of the app.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Tabs
+              defaultValue={theme}
+              onValueChange={setTheme}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="light">
+                  <Sun className="mr-2" />
+                  Light
+                </TabsTrigger>
+                <TabsTrigger value="dark">
+                  <Moon className="mr-2" />
+                  Dark
+                </TabsTrigger>
+                <TabsTrigger value="system">
+                  <Laptop className="mr-2" />
+                  System
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="security" className="mt-6 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Password</CardTitle>
+            <CardDescription>
+              Manage your password settings. Requires your current password.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-6" onSubmit={handlePasswordUpdate}>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="current-password">Current Password</Label>
+                  <Input
+                    id="current-password"
+                    type="password"
+                    value={currentPassword}
+                    onChange={e => setCurrentPassword(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <Input
+                    id="new-password"
+                    type="password"
+                    value={newPassword}
+                    onChange={e => setNewPassword(e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="flex justify-start">
+                <Button type="submit">Update Password</Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Founder Access</CardTitle>
+            <CardDescription>
+              Unlock special administrative features for founders.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {isAdmin ? (
+              <div className="flex items-center gap-3 rounded-lg border border-green-800 bg-green-900/30 p-4">
+                <KeyRound className="h-6 w-6 shrink-0 text-green-400" />
+                <div>
+                  <h4 className="font-semibold text-green-300">
+                    Founder Mode Active
+                  </h4>
+                  <p className="text-sm text-muted-foreground">
+                    You can now see special features across the app.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline">
+                    <KeyRound className="mr-2 h-4 w-4" />
+                    Unlock Founder Features
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Founder Access</DialogTitle>
+                    <DialogDescription>
+                      Enter the secret code to unlock special features.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <Label htmlFor="secret-code" className="sr-only">
+                      Secret Code
+                    </Label>
+                    <Input
+                      id="secret-code"
+                      type="password"
+                      value={secretCode}
+                      onChange={e => setSecretCode(e.target.value)}
+                      placeholder="Enter secret code..."
+                      autoComplete="one-time-code"
+                      onKeyDown={e => e.key === 'Enter' && handleAdminUnlock()}
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={handleAdminUnlock}>Unlock Features</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="danger" className="mt-6">
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle>Danger Zone</CardTitle>
+            <CardDescription>
+              These actions are irreversible. Please proceed with caution.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="mr-2" />
+                  Delete Account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete
+                    your account and remove your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className={cn(
+                      buttonVariants({ variant: 'destructive' }),
+                      'bg-destructive text-destructive-foreground hover:bg-destructive/90'
+                    )}
+                    onClick={handleDeleteAccount}
+                  >
+                    Yes, delete my account
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </Tabs>
   );
 }
