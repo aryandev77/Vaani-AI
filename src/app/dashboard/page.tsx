@@ -9,6 +9,7 @@ import {
   Camera,
   Upload,
   Video,
+  Mic,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -33,6 +34,7 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
+import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 
 export default function DashboardPage() {
   const user = useUser();
@@ -41,6 +43,9 @@ export default function DashboardPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [queryText, setQueryText] = useState('');
   const { toast } = useToast();
+
+  const { isListening, isAvailable, toggleListening } =
+    useSpeechRecognition(setQueryText);
 
   // Camera Dialog states
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
@@ -250,6 +255,15 @@ export default function DashboardPage() {
 
       <div className="border-t">
         <div className="mx-auto max-w-3xl p-4">
+          {!isAvailable && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertTitle>Speech Recognition Not Available</AlertTitle>
+              <AlertDescription>
+                Your browser does not support speech recognition. Please try
+                using Google Chrome.
+              </AlertDescription>
+            </Alert>
+          )}
           <form
             ref={formRef}
             action={formData => {
@@ -272,9 +286,27 @@ export default function DashboardPage() {
               <Camera className="h-5 w-5" />
               <span className="sr-only">Use camera</span>
             </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={toggleListening}
+              disabled={isPending || !isAvailable}
+              className={cn(
+                'shrink-0',
+                isListening && 'text-destructive animate-pulse'
+              )}
+            >
+              <Mic className="h-5 w-5" />
+              <span className="sr-only">Use microphone</span>
+            </Button>
             <Input
               name="query"
-              placeholder="Ask about the phrase of the day, or anything else..."
+              placeholder={
+                isListening
+                  ? 'Listening...'
+                  : 'Ask about the phrase of the day, or anything else...'
+              }
               autoComplete="off"
               disabled={isPending}
               className="flex-1"
