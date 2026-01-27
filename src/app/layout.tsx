@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { OfflineIndicator } from '@/components/offline-indicator';
 import { ThemeProvider } from '@/components/theme-provider';
+import { UpdateNotifier } from '@/components/update-notifier';
 
 export const metadata: Metadata = {
   title: 'Vaani AI',
@@ -39,6 +40,7 @@ export default function RootLayout({
             {children}
             <Toaster />
             <OfflineIndicator />
+            <UpdateNotifier />
           </ThemeProvider>
         </FirebaseClientProvider>
       </body>
