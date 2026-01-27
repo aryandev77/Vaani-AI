@@ -56,6 +56,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { cn } from '@/lib/utils';
+import { Slider } from '@/components/ui/slider';
 
 const languages = [
   { value: 'english', label: 'English' },
@@ -392,15 +393,32 @@ export default function RealTimeTranslationPage() {
                 onChange={e => setSourceText(e.target.value)}
               />
             </div>
-            <div className="grid gap-2">
-              <Label htmlFor="cultural-context">
-                Cultural Context (Optional)
-              </Label>
-              <Input
-                id="cultural-context"
-                name="culturalContext"
-                placeholder="e.g., 'A formal business meeting'"
-              />
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="grid gap-2">
+                <Label htmlFor="cultural-context">
+                  Cultural Context (Optional)
+                </Label>
+                <Input
+                  id="cultural-context"
+                  name="culturalContext"
+                  placeholder="e.g., 'A formal business meeting'"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="formality">Formality</Label>
+                <div className="flex items-center gap-4 pt-2">
+                  <span className="text-sm text-muted-foreground">Casual</span>
+                  <Slider
+                    id="formality"
+                    name="formality"
+                    defaultValue={[2]}
+                    min={1}
+                    max={3}
+                    step={1}
+                  />
+                  <span className="text-sm text-muted-foreground">Formal</span>
+                </div>
+              </div>
             </div>
           </div>
           <div className="space-y-4">

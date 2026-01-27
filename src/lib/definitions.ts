@@ -6,6 +6,7 @@ export type TranslationState = {
   sourceLang?: string;
   targetLang?: string;
   culturalContext?: string;
+  formality?: 'Casual' | 'Formal';
 };
 
 export type InsightState = {

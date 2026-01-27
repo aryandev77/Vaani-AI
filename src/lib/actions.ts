@@ -25,6 +25,11 @@ export async function handleTranslation(
   const sourceLanguage = formData.get('sourceLanguage') as string;
   const targetLanguage = formData.get('targetLanguage') as string;
   const culturalContext = formData.get('culturalContext') as string | undefined;
+  const formalityValue = formData.get('formality') as string;
+
+  let formality: 'Casual' | 'Formal' | undefined;
+  if (formalityValue === '1') formality = 'Casual';
+  if (formalityValue === '3') formality = 'Formal';
 
   try {
     const translationResult = await realTimeTranslationWithContext({
@@ -32,6 +37,7 @@ export async function handleTranslation(
       sourceLanguage,
       targetLanguage,
       culturalContext,
+      formality,
     });
 
     let audioData = '';
@@ -48,6 +54,7 @@ export async function handleTranslation(
       sourceLang: sourceLanguage,
       targetLang: targetLanguage,
       culturalContext: culturalContext,
+      formality: formality,
     };
   } catch (error) {
     console.error(error);

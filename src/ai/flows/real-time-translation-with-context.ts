@@ -15,6 +15,7 @@ const RealTimeTranslationWithContextInputSchema = z.object({
   sourceLanguage: z.string().describe('The language of the text to translate.'),
   targetLanguage: z.string().describe('The language to translate the text into.'),
   culturalContext: z.string().optional().describe('The cultural context of the conversation.'),
+  formality: z.enum(['Casual', 'Formal']).optional().describe('The desired formality of the translation.'),
 });
 export type RealTimeTranslationWithContextInput = z.infer<typeof RealTimeTranslationWithContextInputSchema>;
 
@@ -34,7 +35,22 @@ const prompt = ai.definePrompt({
   name: 'realTimeTranslationWithContextPrompt',
   input: {schema: RealTimeTranslationWithContextInputSchema},
   output: {schema: RealTimeTranslationWithContextOutputSchema},
-  prompt: `You are an expert translator specializing in real-time translation, taking into account cultural context.\n\nYou will translate the given text from the source language to the target language, considering the provided cultural context to ensure accurate and culturally appropriate translation.\n\nSource Language: {{{sourceLanguage}}}\nTarget Language: {{{targetLanguage}}}\nText to Translate: {{{text}}}\nCultural Context: {{{culturalContext}}}\n\nTranslation:`,
+  prompt: `You are an expert translator specializing in real-time translation. Your goal is to provide accurate and culturally appropriate translations.
+
+You will translate the given text from the source language to the target language.
+
+{{#if formality}}
+The user has requested a '{{formality}}' tone. Adjust your translation to match this level of formality.
+{{/if}}
+{{#if culturalContext}}
+Also consider the following cultural context provided by the user: {{{culturalContext}}}
+{{/if}}
+
+Source Language: {{{sourceLanguage}}}
+Target Language: {{{targetLanguage}}}
+Text to Translate: {{{text}}}
+
+Translation:`,
 });
 
 const realTimeTranslationWithContextFlow = ai.defineFlow(
