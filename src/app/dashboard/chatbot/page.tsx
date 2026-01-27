@@ -14,6 +14,7 @@ import {
   Video,
   X,
   FileImage,
+  Microphone,
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -53,6 +54,8 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
+import { cn } from '@/lib/utils';
 
 const languages = [
   { value: 'english', label: 'English' },
@@ -86,6 +89,12 @@ export default function RealTimeTranslationPage() {
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [correctedText, setCorrectedText] = useState('');
   const [sourceText, setSourceText] = useState('');
+
+  const {
+    isListening,
+    isAvailable: isSpeechRecognitionAvailable,
+    toggleListening,
+  } = useSpeechRecognition(setSourceText);
 
   // Camera Dialog states
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
@@ -341,15 +350,42 @@ export default function RealTimeTranslationPage() {
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="text">Your Text</Label>
-                <Button variant="ghost" size="icon" type="button" onClick={openCamera}>
-                  <Camera className="h-5 w-5" />
-                  <span className="sr-only">Open camera</span>
-                </Button>
+                <div className="flex items-center">
+                  {isSpeechRecognitionAvailable && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      type="button"
+                      onClick={toggleListening}
+                      className={cn(
+                        isListening && 'text-destructive animate-pulse'
+                      )}
+                    >
+                      <Microphone className="h-5 w-5" />
+                      <span className="sr-only">
+                        {isListening ? 'Stop listening' : 'Use microphone'}
+                      </span>
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    type="button"
+                    onClick={openCamera}
+                  >
+                    <Camera className="h-5 w-5" />
+                    <span className="sr-only">Open camera</span>
+                  </Button>
+                </div>
               </div>
               <Textarea
                 id="text"
                 name="text"
-                placeholder="Enter text to translate or use the camera..."
+                placeholder={
+                  isListening
+                    ? 'Listening...'
+                    : 'Enter text to translate or use the camera...'
+                }
                 className="min-h-[150px]"
                 required
                 value={sourceText}
