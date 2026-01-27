@@ -1,3 +1,4 @@
+
 'use server';
 
 import type {
@@ -84,6 +85,12 @@ export async function handleEmotion(
   const text = formData.get('text') as string;
   const targetLanguage = formData.get('targetLanguage') as string;
 
+  if (!text || !targetLanguage) {
+    return {
+      translatedText: 'Error: Missing text or target language.',
+    };
+  }
+
   try {
     const result = await detectAndPreserveEmotion({ text, targetLanguage });
     return {
@@ -92,7 +99,7 @@ export async function handleEmotion(
   } catch (error) {
     console.error(error);
     return {
-      translatedText: 'Error: Could not translate text.',
+      translatedText: 'Error: Could not perform emotion-aware translation.',
     };
   }
 }
