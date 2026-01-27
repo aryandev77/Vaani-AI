@@ -8,3 +8,4 @@ import '@/ai/flows/real-time-translation-with-context.ts';
 import '@/ai/flows/text-to-speech.ts';
 import '@/ai/flows/chatbot.ts';
 import '@/ai/flows/scripture-tutor.ts';
+import '@/ai/flows/image-to-text.ts';

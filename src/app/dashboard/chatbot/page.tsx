@@ -9,11 +9,16 @@ import {
   Play,
   ThumbsUp,
   ThumbsDown,
+  Camera,
+  Upload,
+  Video,
+  X,
+  FileImage,
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-import { handleTranslation } from '@/lib/actions';
+import { handleTranslation, extractTextFromImage } from '@/lib/actions';
 import type { TranslationState } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,7 +50,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const languages = [
   { value: 'english', label: 'English' },
@@ -78,6 +85,20 @@ export default function RealTimeTranslationPage() {
   const [translationDocId, setTranslationDocId] = useState<string | null>(null);
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [correctedText, setCorrectedText] = useState('');
+  const [sourceText, setSourceText] = useState('');
+
+  // Camera Dialog states
+  const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(
+    null
+  );
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [isExtracting, setIsExtracting] = useState(false);
+
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const user = useUser();
   const firestore = useFirestore();
@@ -129,6 +150,101 @@ export default function RealTimeTranslationPage() {
         });
     }
   }, [state, user, firestore, toast]);
+
+  const openCamera = async () => {
+    setIsCameraDialogOpen(true);
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        setHasCameraPermission(true);
+        setCameraStream(stream);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+      }
+    } else {
+      setHasCameraPermission(false);
+    }
+  };
+
+  const closeCamera = () => {
+    if (cameraStream) {
+      cameraStream.getTracks().forEach(track => track.stop());
+    }
+    setCameraStream(null);
+    setCapturedImage(null);
+    setIsCameraDialogOpen(false);
+  };
+
+  const handleCapture = () => {
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const context = canvas.getContext('2d');
+      if (context) {
+        context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+        const dataUrl = canvas.toDataURL('image/png');
+        setCapturedImage(dataUrl);
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+          setCameraStream(null);
+        }
+      }
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setCapturedImage(reader.result as string);
+        if (cameraStream) {
+          cameraStream.getTracks().forEach(track => track.stop());
+          setCameraStream(null);
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleExtract = async () => {
+    if (!capturedImage) return;
+    setIsExtracting(true);
+    try {
+      const result = await extractTextFromImage(capturedImage);
+      if (result.error) {
+        toast({
+          variant: 'destructive',
+          title: 'Extraction Failed',
+          description: result.error,
+        });
+      } else {
+        setSourceText(result.text);
+        toast({
+          title: 'Text Extracted!',
+          description:
+            'The text from the image has been placed in the text box.',
+        });
+        closeCamera();
+      }
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Extraction Failed',
+        description: 'An unexpected error occurred.',
+      });
+    } finally {
+      setIsExtracting(false);
+    }
+  };
 
   const handlePlayAudio = () => {
     if (audioRef.current) {
@@ -223,13 +339,21 @@ export default function RealTimeTranslationPage() {
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="text">Your Text</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="text">Your Text</Label>
+                <Button variant="ghost" size="icon" type="button" onClick={openCamera}>
+                  <Camera className="h-5 w-5" />
+                  <span className="sr-only">Open camera</span>
+                </Button>
+              </div>
               <Textarea
                 id="text"
                 name="text"
-                placeholder="Enter text to translate..."
+                placeholder="Enter text to translate or use the camera..."
                 className="min-h-[150px]"
                 required
+                value={sourceText}
+                onChange={e => setSourceText(e.target.value)}
               />
             </div>
             <div className="grid gap-2">
@@ -325,6 +449,60 @@ export default function RealTimeTranslationPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={isCameraDialogOpen} onOpenChange={closeCamera}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Extract Text from Image</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {!capturedImage && hasCameraPermission === false && (
+              <Alert variant="destructive">
+                <AlertTitle>Camera Access Denied</AlertTitle>
+                <AlertDescription>
+                  Please allow camera access in your browser settings to use this feature. You can still upload an image from your gallery.
+                </AlertDescription>
+              </Alert>
+            )}
+            <div className="relative aspect-video w-full overflow-hidden rounded-md border bg-secondary">
+              {capturedImage ? (
+                <Image src={capturedImage} alt="Captured" layout="fill" objectFit="contain" />
+              ) : cameraStream ? (
+                <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+              ) : (
+                <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
+                  <Video className="h-12 w-12" />
+                  <p>Camera feed will appear here</p>
+                </div>
+              )}
+            </div>
+            <canvas ref={canvasRef} className="hidden" />
+            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+          </div>
+          <DialogFooter className="gap-2 sm:justify-between">
+            {capturedImage ? (
+              <>
+                <Button variant="outline" onClick={() => { setCapturedImage(null); openCamera(); }}>Retake</Button>
+                <Button onClick={handleExtract} disabled={isExtracting}>
+                  {isExtracting ? <LoaderCircle className="animate-spin" /> : 'Extract Text'}
+                </Button>
+              </>
+            ) : cameraStream ? (
+              <>
+                <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                  <Upload className="mr-2 h-4 w-4" /> Upload
+                </Button>
+                <Button onClick={handleCapture}>Capture</Button>
+              </>
+            ) : (
+              <Button onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" /> Upload an Image
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
       {state.translatedText && !state.translatedText.startsWith('Error:') && (
         <>
           <Card className="mt-8">

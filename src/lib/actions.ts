@@ -14,6 +14,7 @@ import { detectAndPreserveEmotion } from '@/ai/flows/detect-and-preserve-emotion
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { chatWithBot } from '@/ai/flows/chatbot';
 import { scriptureTutor } from '@/ai/flows/scripture-tutor';
+import { imageToText } from '@/ai/flows/image-to-text';
 
 export async function handleTranslation(
   prevState: TranslationState,
@@ -187,6 +188,26 @@ export async function handleScriptureChat(
     return {
       history: [...currentHistory, modelMessage],
       error: errorMessage,
+    };
+  }
+}
+
+export async function extractTextFromImage(
+  imageDataUri: string
+): Promise<{ text: string; error?: string }> {
+  if (!imageDataUri) {
+    return { text: '', error: 'No image provided.' };
+  }
+
+  try {
+    const result = await imageToText({ imageDataUri });
+    return { text: result.text };
+  } catch (error) {
+    console.error('Error extracting text from image:', error);
+    return {
+      text: '',
+      error:
+        'Failed to extract text from the image. The image might be unclear or contain no text. Please try again.',
     };
   }
 }
