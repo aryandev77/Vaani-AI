@@ -23,6 +23,12 @@
       "description": "Dark mode background for billing page",
       "imageUrl": "https://images.unsplash.com/photo-1588851218505-4d2b45a9b79c?q=80&w=1080",
       "imageHint": "woman sunglasses"
+    },
+    {
+      "id": "remote-user-avatar",
+      "description": "Avatar for remote user in video call",
+      "imageUrl": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1080",
+      "imageHint": "woman portrait"
     }
   ]
 }
