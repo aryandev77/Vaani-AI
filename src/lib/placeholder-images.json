@@ -17,6 +17,12 @@
       "description": "Avatar for lip sync visualization",
       "imageUrl": "https://images.unsplash.com/photo-1592621385612-4d7129426394?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHx3b21hbiUyMHNtaWxpbmd8ZW58MHx8fHwxNzY5MTk3NzY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "woman smiling"
+    },
+    {
+      "id": "billing-dark-background",
+      "description": "Dark mode background for billing page",
+      "imageUrl": "https://images.unsplash.com/photo-1588851218505-4d2b45a9b79c?q=80&w=1080",
+      "imageHint": "woman sunglasses"
     }
   ]
 }

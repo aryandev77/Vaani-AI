@@ -14,6 +14,7 @@ import {
   Swords,
   BookMarked,
   Settings,
+  CreditCard,
 } from 'lucide-react';
 
 import {
@@ -55,6 +56,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard/settings': 'Settings',
       '/dashboard/game': 'Language Games',
       '/dashboard/spiritual-texts': 'Spiritual Texts',
+      '/dashboard/billing': 'Billing & Subscriptions',
     };
     return pageTitles[pathname] || 'Dashboard';
   }, [pathname]);
@@ -180,6 +182,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/history">
                     <History />
                     <span>History</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Billing',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  isActive={pathname === '/dashboard/billing'}
+                >
+                  <Link href="/dashboard/billing">
+                    <CreditCard />
+                    <span>Billing</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
