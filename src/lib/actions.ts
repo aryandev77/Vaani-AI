@@ -16,6 +16,7 @@ import { textToSpeech } from '@/ai/flows/text-to-speech';
 import { chatWithBot } from '@/ai/flows/chatbot';
 import { scriptureTutor } from '@/ai/flows/scripture-tutor';
 import { imageToText } from '@/ai/flows/image-to-text';
+import { checkForFauxPas } from '@/ai/flows/cultural-faux-pas-alert';
 
 export async function handleTranslation(
   prevState: TranslationState,
@@ -226,5 +227,25 @@ export async function extractTextFromImage(
       error:
         'Failed to extract text from the image. The image might be unclear or contain no text. Please try again.',
     };
+  }
+}
+
+export async function checkCulturalFauxPas(
+  text: string
+): Promise<{ message?: string; suggestion?: string } | null> {
+  if (!text || text.trim().length < 15) {
+    return null;
+  }
+
+  try {
+    const result = await checkForFauxPas({ text });
+    if (result.isFauxPas) {
+      return { message: result.message, suggestion: result.suggestion };
+    }
+    return null;
+  } catch (error) {
+    console.error('Faux-pas check failed:', error);
+    // Silently fail for the user on this passive check
+    return null;
   }
 }

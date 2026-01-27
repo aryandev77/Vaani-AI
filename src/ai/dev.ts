@@ -9,3 +9,4 @@ import '@/ai/flows/text-to-speech.ts';
 import '@/ai/flows/chatbot.ts';
 import '@/ai/flows/scripture-tutor.ts';
 import '@/ai/flows/image-to-text.ts';
+import '@/ai/flows/cultural-faux-pas-alert.ts';

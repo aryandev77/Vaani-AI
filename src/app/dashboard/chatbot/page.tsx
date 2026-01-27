@@ -15,11 +15,17 @@ import {
   X,
   FileImage,
   Mic,
+  TriangleAlert,
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { motion, AnimatePresence } from 'framer-motion';
 
-import { handleTranslation, extractTextFromImage } from '@/lib/actions';
+import {
+  handleTranslation,
+  extractTextFromImage,
+  checkCulturalFauxPas,
+} from '@/lib/actions';
 import type { TranslationState } from '@/lib/definitions';
 import { Button } from '@/components/ui/button';
 import {
@@ -97,11 +103,19 @@ export default function RealTimeTranslationPage() {
     toggleListening,
   } = useSpeechRecognition(setSourceText);
 
+  // Faux-Pas Alert states
+  const [fauxPasAlert, setFauxPasAlert] = useState<{
+    message?: string;
+    suggestion?: string;
+  } | null>(null);
+  const [isCheckingFauxPas, setIsCheckingFauxPas] = useState(false);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Camera Dialog states
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(
-    null
-  );
+  const [hasCameraPermission, setHasCameraPermission] = useState<
+    boolean | null
+  >(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -114,6 +128,31 @@ export default function RealTimeTranslationPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const lastProcessedId = useRef<string | null>(null);
+
+  // Real-time faux-pas check
+  useEffect(() => {
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    setFauxPasAlert(null); // Clear previous alert on new input
+
+    if (sourceText.trim().length > 15) {
+      setIsCheckingFauxPas(true);
+      debounceTimeoutRef.current = setTimeout(async () => {
+        const alert = await checkCulturalFauxPas(sourceText);
+        setFauxPasAlert(alert);
+        setIsCheckingFauxPas(false);
+      }, 1500); // 1.5-second debounce
+    } else {
+      setIsCheckingFauxPas(false);
+    }
+
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [sourceText]);
 
   useEffect(() => {
     if (state.audioData && audioRef.current) {
@@ -351,7 +390,10 @@ export default function RealTimeTranslationPage() {
             <div className="grid gap-2">
               <div className="flex items-center justify-between">
                 <Label htmlFor="text">Your Text</Label>
-                <div className="flex items-center">
+                <div className="flex items-center gap-1">
+                  {isCheckingFauxPas && (
+                    <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+                  )}
                   {isSpeechRecognitionAvailable && (
                     <Button
                       variant="ghost"
@@ -392,6 +434,34 @@ export default function RealTimeTranslationPage() {
                 value={sourceText}
                 onChange={e => setSourceText(e.target.value)}
               />
+              <AnimatePresence>
+                {fauxPasAlert && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Alert
+                      variant="destructive"
+                      className="mt-2 border-yellow-400/50 bg-yellow-400/10 text-yellow-700 dark:text-yellow-300 [&>svg]:text-yellow-500"
+                    >
+                      <TriangleAlert className="h-4 w-4" />
+                      <AlertTitle className="font-semibold">
+                        {fauxPasAlert.message}
+                      </AlertTitle>
+                      {fauxPasAlert.suggestion && (
+                        <AlertDescription>
+                          Suggestion:{' '}
+                          <span className="font-medium">
+                            "{fauxPasAlert.suggestion}"
+                          </span>
+                        </AlertDescription>
+                      )}
+                    </Alert>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div className="grid gap-2">
@@ -514,15 +584,27 @@ export default function RealTimeTranslationPage() {
               <Alert variant="destructive">
                 <AlertTitle>Camera Access Denied</AlertTitle>
                 <AlertDescription>
-                  Please allow camera access in your browser settings to use this feature. You can still upload an image from your gallery.
+                  Please allow camera access in your browser settings to use
+                  this feature. You can still upload an image from your gallery.
                 </AlertDescription>
               </Alert>
             )}
             <div className="relative aspect-video w-full overflow-hidden rounded-md border bg-secondary">
               {capturedImage ? (
-                <Image src={capturedImage} alt="Captured" layout="fill" objectFit="contain" />
+                <Image
+                  src={capturedImage}
+                  alt="Captured"
+                  layout="fill"
+                  objectFit="contain"
+                />
               ) : cameraStream ? (
-                <video ref={videoRef} className="h-full w-full object-cover" autoPlay muted playsInline />
+                <video
+                  ref={videoRef}
+                  className="h-full w-full object-cover"
+                  autoPlay
+                  muted
+                  playsInline
+                />
               ) : (
                 <div className="flex h-full w-full flex-col items-center justify-center gap-2 text-muted-foreground">
                   <Video className="h-12 w-12" />
@@ -531,19 +613,40 @@ export default function RealTimeTranslationPage() {
               )}
             </div>
             <canvas ref={canvasRef} className="hidden" />
-            <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept="image/*" className="hidden" />
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
           </div>
           <DialogFooter className="gap-2 sm:justify-between">
             {capturedImage ? (
               <>
-                <Button variant="outline" onClick={() => { setCapturedImage(null); openCamera(); }}>Retake</Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setCapturedImage(null);
+                    openCamera();
+                  }}
+                >
+                  Retake
+                </Button>
                 <Button onClick={handleExtract} disabled={isExtracting}>
-                  {isExtracting ? <LoaderCircle className="animate-spin" /> : 'Extract Text'}
+                  {isExtracting ? (
+                    <LoaderCircle className="animate-spin" />
+                  ) : (
+                    'Extract Text'
+                  )}
                 </Button>
               </>
             ) : cameraStream ? (
               <>
-                <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Button
+                  variant="outline"
+                  onClick={() => fileInputRef.current?.click()}
+                >
                   <Upload className="mr-2 h-4 w-4" /> Upload
                 </Button>
                 <Button onClick={handleCapture}>Capture</Button>
@@ -556,7 +659,7 @@ export default function RealTimeTranslationPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
+
       {state.translatedText && !state.translatedText.startsWith('Error:') && (
         <>
           <Card className="mt-8">
@@ -637,5 +740,3 @@ export default function RealTimeTranslationPage() {
     </div>
   );
 }
-
-    
