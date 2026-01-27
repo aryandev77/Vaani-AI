@@ -13,12 +13,9 @@ import {
   uploadBytesResumable,
   getDownloadURL,
 } from 'firebase/storage';
+import { KeyRound, UserX, BookUser } from 'lucide-react';
 
-import {
-  useAuth,
-  useUser,
-  useStorage,
-} from '@/firebase';
+import { useAuth, useUser, useStorage } from '@/firebase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,7 +41,6 @@ import { Progress } from '@/components/ui/progress';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
 import { LoadingIndicator } from '@/components/loading-indicator';
-import { KeyRound, UserX, BookUser } from 'lucide-react';
 
 export default function SettingsPage() {
   const user = useUser();

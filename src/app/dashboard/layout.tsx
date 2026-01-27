@@ -13,6 +13,7 @@ import {
   Smile,
   Swords,
   BookMarked,
+  Settings,
 } from 'lucide-react';
 
 import {
@@ -50,7 +51,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard/emotion': 'Emotion & Tone Preservation',
       '/dashboard/history': 'Conversation History',
       '/dashboard/about': 'About Vaani AI',
-      '/dashboard/profile': 'Profile Settings',
+      '/dashboard/profile': 'Your Profile',
       '/dashboard/billing': 'Billing',
       '/dashboard/settings': 'Settings',
       '/dashboard/game': 'Language Games',
@@ -195,6 +196,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/about">
                     <Info />
                     <span>About</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+                 <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Settings',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  isActive={pathname === '/dashboard/settings'}
+                >
+                  <Link href="/dashboard/settings">
+                    <Settings />
+                    <span>Settings</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

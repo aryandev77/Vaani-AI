@@ -9,7 +9,6 @@ import {
 } from '@/firebase';
 import {
   doc,
-  getDoc,
   collection,
   query,
   orderBy,
@@ -31,7 +30,6 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import {
   ArrowRight,
@@ -220,13 +218,13 @@ export default function ProfilePage() {
         <div className="grid grid-cols-3 gap-4">
           <StatCard
             icon={<Repeat />}
-            value="125+"
+            value={translations.length}
             label="Translations"
           />
           <StatCard icon={<Flame />} value="21" label="Day Streak" />
           <StatCard
             icon={<Languages />}
-            value={spokenLanguages.length || 3}
+            value={spokenLanguages.length || 0}
             label="Languages"
           />
         </div>
