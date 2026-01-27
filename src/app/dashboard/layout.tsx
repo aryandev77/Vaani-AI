@@ -87,6 +87,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'AI Tutor',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard'}
                 >
                   <Link href="/dashboard">
@@ -102,6 +103,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Translate',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/chatbot'}
                 >
                   <Link href="/dashboard/chatbot">
@@ -117,6 +119,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Learning Mode',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/learning'}
                 >
                   <Link href="/dashboard/learning">
@@ -132,6 +135,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Spiritual Texts',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/spiritual-texts'}
                 >
                   <Link href="/dashboard/spiritual-texts">
@@ -147,6 +151,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Emotion Tool',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/emotion'}
                 >
                   <Link href="/dashboard/emotion">
@@ -162,6 +167,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Games',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/game'}
                 >
                   <Link href="/dashboard/game">
@@ -177,6 +183,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'History',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/history'}
                 >
                   <Link href="/dashboard/history">
@@ -192,6 +199,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'About',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/about'}
                 >
                   <Link href="/dashboard/about">
@@ -207,11 +215,28 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     children: 'Settings',
                     className: 'bg-primary text-primary-foreground',
                   }}
+                  size="lg"
                   isActive={pathname === '/dashboard/settings'}
                 >
                   <Link href="/dashboard/settings">
                     <Settings />
                     <span>Settings</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+               <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Billing',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  size="lg"
+                  isActive={pathname === '/dashboard/billing'}
+                >
+                  <Link href="/dashboard/billing">
+                    <CreditCard />
+                    <span>Billing</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
