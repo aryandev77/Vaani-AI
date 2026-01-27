@@ -17,6 +17,7 @@ import {
   CreditCard,
   Phone,
   Quote,
+  Voicemail,
 } from 'lucide-react';
 
 import {
@@ -94,6 +95,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     const pageTitles: { [key: string]: string } = {
       '/dashboard': 'AI Language Tutor',
       '/dashboard/chatbot': 'Real-Time Translation',
+      '/dashboard/voice-memo': 'Voice Memo & Phrasebook',
       '/dashboard/live-call': 'Live Call Translation',
       '/dashboard/learning': 'Learning Mode',
       '/dashboard/emotion': 'Emotion & Tone Preservation',
@@ -156,6 +158,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Link href="/dashboard/chatbot">
                     <Languages />
                     <span>Translate</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
+                    children: 'Voice Memo',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  size="lg"
+                  isActive={pathname === '/dashboard/voice-memo'}
+                >
+                  <Link href="/dashboard/voice-memo">
+                    <Voicemail />
+                    <span>Voice Memo</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

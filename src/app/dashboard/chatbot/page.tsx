@@ -14,7 +14,6 @@ import {
   Video,
   X,
   FileImage,
-  Mic,
   TriangleAlert,
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
@@ -60,8 +59,6 @@ import {
   DialogClose,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
-import { cn } from '@/lib/utils';
 import { Slider } from '@/components/ui/slider';
 
 const languages = [
@@ -96,12 +93,6 @@ export default function RealTimeTranslationPage() {
   const [isFeedbackDialogOpen, setIsFeedbackDialogOpen] = useState(false);
   const [correctedText, setCorrectedText] = useState('');
   const [sourceText, setSourceText] = useState('');
-
-  const {
-    isListening,
-    isAvailable: isSpeechRecognitionAvailable,
-    toggleListening,
-  } = useSpeechRecognition(setSourceText);
 
   // Faux-Pas Alert states
   const [fauxPasAlert, setFauxPasAlert] = useState<{
@@ -394,22 +385,6 @@ export default function RealTimeTranslationPage() {
                   {isCheckingFauxPas && (
                     <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
                   )}
-                  {isSpeechRecognitionAvailable && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      type="button"
-                      onClick={toggleListening}
-                      className={cn(
-                        isListening && 'text-destructive animate-pulse'
-                      )}
-                    >
-                      <Mic className="h-5 w-5" />
-                      <span className="sr-only">
-                        {isListening ? 'Stop listening' : 'Use microphone'}
-                      </span>
-                    </Button>
-                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -424,11 +399,7 @@ export default function RealTimeTranslationPage() {
               <Textarea
                 id="text"
                 name="text"
-                placeholder={
-                  isListening
-                    ? 'Listening...'
-                    : 'Enter text to translate or use the camera...'
-                }
+                placeholder="Enter text to translate or use the camera..."
                 className="min-h-[150px]"
                 required
                 value={sourceText}
@@ -444,7 +415,7 @@ export default function RealTimeTranslationPage() {
                   >
                     <Alert
                       variant="destructive"
-                      className="mt-2 border-yellow-400/50 bg-yellow-400/10 text-yellow-700 dark:text-yellow-300 [&>svg]:text-yellow-500"
+                      className="mt-2 border-yellow-400/50 bg-yellow-400/10 text-yellow-700 dark:text-yellow-300 [&gt;svg]:text-yellow-500"
                     >
                       <TriangleAlert className="h-4 w-4" />
                       <AlertTitle className="font-semibold">
@@ -537,7 +508,7 @@ export default function RealTimeTranslationPage() {
       </form>
       <Card className="mt-8">
         <CardHeader>
-          <CardTitle className="font-headline">Voice & Lip Sync</CardTitle>
+          <CardTitle className="font-headline">Voice &amp; Lip Sync</CardTitle>
           <CardDescription>
             Visual representation of translated audio and lip movement.
           </CardDescription>

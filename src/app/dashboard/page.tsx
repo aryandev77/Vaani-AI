@@ -9,7 +9,6 @@ import {
   Camera,
   Upload,
   Video,
-  Mic,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -34,7 +33,6 @@ import {
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 
 export default function DashboardPage() {
   const user = useUser();
@@ -43,12 +41,6 @@ export default function DashboardPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [queryText, setQueryText] = useState('');
   const { toast } = useToast();
-
-  const {
-    isListening,
-    isAvailable: isSpeechRecognitionAvailable,
-    toggleListening,
-  } = useSpeechRecognition(setQueryText);
 
   // Camera Dialog states
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
@@ -280,31 +272,9 @@ export default function DashboardPage() {
               <Camera className="h-5 w-5" />
               <span className="sr-only">Use camera</span>
             </Button>
-            {isSpeechRecognitionAvailable && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={toggleListening}
-                disabled={isPending}
-                className={cn(
-                  'shrink-0',
-                  isListening && 'text-destructive animate-pulse'
-                )}
-              >
-                <Mic className="h-5 w-5" />
-                <span className="sr-only">
-                  {isListening ? 'Stop listening' : 'Use microphone'}
-                </span>
-              </Button>
-            )}
             <Input
               name="query"
-              placeholder={
-                isListening
-                  ? 'Listening...'
-                  : "Ask about the phrase of the day, or anything else..."
-              }
+              placeholder="Ask about the phrase of the day, or anything else..."
               autoComplete="off"
               disabled={isPending}
               className="flex-1"

@@ -1,6 +1,12 @@
 
 'use server';
 
+import {
+  collection,
+  addDoc,
+  serverTimestamp,
+} from 'firebase/firestore';
+
 import type {
   TranslationState,
   InsightState,
@@ -8,6 +14,7 @@ import type {
   ChatState,
   ChatHistoryItem,
   ScriptureChatState,
+  PlayAudioState,
 } from './definitions';
 import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
 import { summarizeCulturalInsights } from '@/ai/flows/summarize-cultural-insights';
@@ -247,5 +254,25 @@ export async function checkCulturalFauxPas(
     console.error('Faux-pas check failed:', error);
     // Silently fail for the user on this passive check
     return null;
+  }
+}
+
+export async function handlePlayMemoAudio(
+  prevState: PlayAudioState,
+  formData: FormData
+): Promise<PlayAudioState> {
+  const text = formData.get('textToPlay') as string;
+  const memoId = formData.get('memoId') as string;
+
+  if (!text) {
+    return { error: 'No text provided.', memoId };
+  }
+
+  try {
+    const ttsResult = await textToSpeech(text);
+    return { audioData: ttsResult.audioData, memoId };
+  } catch (error) {
+    console.error('TTS Error in action', error);
+    return { error: 'Could not generate audio.', memoId };
   }
 }

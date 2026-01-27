@@ -149,6 +149,45 @@
         "userCorrectedText",
         "timestamp"
       ]
+    },
+    "voiceMemo": {
+      "title": "Voice Memo",
+      "description": "A record of a single voice memo translation.",
+      "type": "object",
+      "properties": {
+        "originalText": {
+          "type": "string",
+          "description": "The original text transcribed from the user's voice."
+        },
+        "translatedText": {
+          "type": "string",
+          "description": "The resulting translated text."
+        },
+        "sourceLang": {
+          "type": "string",
+          "description": "The source language of the memo."
+        },
+        "targetLang": {
+          "type": "string",
+          "description": "The target language for the translation."
+        },
+        "title": {
+          "type": "string",
+          "description": "A user-defined title for the memo."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp of when the memo was created."
+        }
+      },
+      "required": [
+        "originalText",
+        "translatedText",
+        "sourceLang",
+        "targetLang",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -175,6 +214,12 @@
         "$ref": "#/entities/feedback"
       },
       "description": "Stores all user feedback on translations to improve the AI model."
+    },
+    "/users/{userId}/voice-memos/{memoId}": {
+      "schema": {
+        "$ref": "#/entities/voiceMemo"
+      },
+      "description": "Stores a user's saved voice memo phrasebook."
     }
   }
 }

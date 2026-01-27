@@ -41,3 +41,24 @@ export type ScriptureChatState = {
   history: ChatHistoryItem[];
   error?: string;
 };
+
+export type VoiceMemo = {
+  id: string;
+  originalText: string;
+  translatedText: string;
+  sourceLang: string;
+  targetLang: string;
+  title?: string;
+  createdAt: import('firebase/firestore').Timestamp;
+};
+
+export type VoiceMemoState = {
+  memos?: VoiceMemo[];
+  error?: string;
+};
+
+export type PlayAudioState = {
+  audioData?: string;
+  error?: string;
+  memoId?: string; // To track which memo is playing
+};
