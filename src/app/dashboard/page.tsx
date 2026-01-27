@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useActionState, useRef, useEffect, useState } from 'react';
@@ -5,14 +6,11 @@ import {
   SendHorizonal,
   User,
   LoaderCircle,
-  Lightbulb,
-  Languages,
-  Mail,
-  Globe,
   Camera,
   Upload,
   Video,
   Mic,
+  Quote,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -27,7 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useUser } from '@/firebase';
 import { cn } from '@/lib/utils';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LogoIcon } from '@/components/logo-icon';
 import {
   Dialog,
@@ -39,27 +37,38 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
 
-// New component for example prompts
-const ExamplePromptCard = ({
-  icon,
-  title,
-  subtitle,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle: string;
-}) => (
-  <Card className="h-full text-left transition-colors group-hover:bg-muted">
-    <div className="flex flex-row items-center gap-4 p-4">
-      {icon}
-      <div>
-        <p className="font-semibold">{title}</p>
-        <p className="text-sm text-muted-foreground">{subtitle}</p>
-      </div>
-    </div>
-  </Card>
-);
+const phraseOfTheDay = {
+  phrase: 'Bite the bullet',
+  meaning:
+    'To face a difficult or unpleasant situation with courage and determination.',
+  story:
+    'This idiom is believed to have originated in the 18th century, before the widespread use of anesthesia. During battlefield surgery, wounded soldiers were given a lead bullet to bite down on to cope with the excruciating pain.',
+  translations: [
+    {
+      lang: 'Hindi',
+      text: 'कठिनाई का हिम्मत से सामना करना',
+      emotion: 'Determined',
+    },
+    {
+      lang: 'Spanish',
+      text: 'Hacer de tripas corazón',
+      emotion: 'Resolute',
+    },
+    {
+      lang: 'Japanese',
+      text: '歯を食いしばる (Ha o kuishibaru)',
+      emotion: 'Gritty',
+    },
+  ],
+};
 
 export default function DashboardPage() {
   const user = useUser();
@@ -77,9 +86,9 @@ export default function DashboardPage() {
 
   // Camera Dialog states
   const [isCameraDialogOpen, setIsCameraDialogOpen] = useState(false);
-  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(
-    null
-  );
+  const [hasCameraPermission, setHasCameraPermission] = useState<
+    boolean | null
+  >(null);
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isExtracting, setIsExtracting] = useState(false);
@@ -94,7 +103,7 @@ export default function DashboardPage() {
         role: 'model',
         content: [
           {
-            text: "Hello! I'm Vaani, your personal language tutor. How can I help you today?",
+            text: "Hello! I'm Vaani. Check out the 'Phrase of the Day' above, or ask me anything you'd like about languages, idioms, or culture!",
           },
         ],
       },
@@ -103,9 +112,7 @@ export default function DashboardPage() {
   const [state, dispatch, isPending] = useActionState(handleChat, initialState);
 
   useEffect(() => {
-    if (state.history.length > 1 || isPending) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.history, isPending]);
 
   const openCamera = async () => {
@@ -204,198 +211,134 @@ export default function DashboardPage() {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 overflow-y-auto">
-        {state.history.length <= 1 && !isPending ? (
-          <div className="flex h-full flex-col items-center justify-center gap-8 p-4">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <svg
-                width="60"
-                height="60"
-                viewBox="0 0 28 28"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <defs>
-                  <linearGradient id="logoGradient" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor="hsl(var(--primary))" />
-                    <stop offset="100%" stopColor="hsl(var(--accent))" />
-                  </linearGradient>
-                </defs>
-                <rect
-                  width="28"
-                  height="28"
-                  rx="6"
-                  fill="url(#logoGradient)"
-                />
-                <path
-                  d="M 6 9 L 11 18 Q 14 21 17 18 L 22 9"
-                  stroke="hsl(var(--primary-foreground))"
-                  strokeWidth="3.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </svg>
-              <h1 className="text-2xl font-semibold">
-                How can I help you today?
-              </h1>
-            </div>
-            <div className="w-full max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 md:grid">
-              <form action={dispatch}>
-                <input
-                  type="hidden"
-                  name="query"
-                  value="Explain the idiom 'break a leg'"
-                />
-                <button
-                  type="submit"
-                  className="group h-full w-full text-left"
-                  disabled={isPending}
-                >
-                  <ExamplePromptCard
-                    icon={<Lightbulb className="h-6 w-6 text-primary" />}
-                    title="Explain an idiom"
-                    subtitle="'Break a leg'"
-                  />
-                </button>
-              </form>
-              <form action={dispatch}>
-                <input
-                  type="hidden"
-                  name="query"
-                  value="How do I say 'Where is the nearest train station?' in Japanese?"
-                />
-                <button
-                  type="submit"
-                  className="group h-full w-full text-left"
-                  disabled={isPending}
-                >
-                  <ExamplePromptCard
-                    icon={<Languages className="h-6 w-6 text-primary" />}
-                    title="Translate a phrase"
-                    subtitle="'Where is the nearest train station?' in Japanese"
-                  />
-                </button>
-              </form>
-              <form action={dispatch}>
-                <input
-                  type="hidden"
-                  name="query"
-                  value="Help me write a formal email to a professor asking for an extension on an assignment."
-                />
-                <button
-                  type="submit"
-                  className="group h-full w-full text-left"
-                  disabled={isPending}
-                >
-                  <ExamplePromptCard
-                    icon={<Mail className="h-6 w-6 text-primary" />}
-                    title="Help me write an email"
-                    subtitle="To a professor, asking for an extension"
-                  />
-                </button>
-              </form>
-              <form action={dispatch}>
-                <input
-                  type="hidden"
-                  name="query"
-                  value="What's the cultural difference between a 'siesta' in Spain and a regular nap?"
-                />
-                <button
-                  type="submit"
-                  className="group h-full w-full text-left"
-                  disabled={isPending}
-                >
-                  <ExamplePromptCard
-                    icon={<Globe className="h-6 w-6 text-primary" />}
-                    title="Explain cultural context"
-                    subtitle="The difference between 'siesta' in Spain and a 'nap'"
-                  />
-                </button>
-              </form>
-            </div>
-          </div>
-        ) : (
-          <ScrollArea className="h-full p-4">
-            <div className="mx-auto max-w-3xl space-y-6">
-              {state.history.slice(1).map((message, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    'flex items-start gap-4',
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
-                  )}
-                >
-                  {message.role === 'model' && (
-                    <Avatar className="h-9 w-9 border">
-                      <AvatarFallback className="bg-transparent p-1">
-                        <LogoIcon />
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                  <div
-                    className={cn(
-                      'max-w-xl rounded-lg p-3 text-sm shadow-sm',
-                      message.role === 'user'
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted'
-                    )}
-                  >
-                    {message.role === 'model' ? (
-                      <ReactMarkdown
-                        remarkPlugins={[remarkGfm]}
-                        className="prose prose-sm dark:prose-invert"
-                        components={{
-                          p: ({ node, ...props }) => (
-                            <p className="mb-2 last:mb-0" {...props} />
-                          ),
-                        }}
-                      >
-                        {message.content[0].text}
-                      </ReactMarkdown>
-                    ) : (
-                      <p className="whitespace-pre-wrap">
-                        {message.content[0].text}
+      <ScrollArea className="flex-1">
+        <div className="mx-auto max-w-3xl space-y-6 p-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 font-headline">
+                <Quote /> Phrase of the Day
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible>
+                <AccordionItem value="item-1">
+                  <AccordionTrigger>
+                    <div className="text-left">
+                      <p className="text-xl font-semibold">
+                        {phraseOfTheDay.phrase}
                       </p>
-                    )}
-                  </div>
-                  {message.role === 'user' && user && (
-                    <Avatar className="h-9 w-9">
-                      {user.photoURL ? (
-                        <AvatarImage src={user.photoURL} alt="User Avatar" />
-                      ) : (
-                        userAvatar && (
-                          <AvatarImage
-                            src={userAvatar.imageUrl}
-                            alt="User Avatar"
-                            data-ai-hint={userAvatar.imageHint}
-                          />
-                        )
-                      )}
-                      <AvatarFallback>
-                        {user.displayName?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  )}
-                </div>
-              ))}
-              {isPending && (
-                <div className="flex items-start justify-start gap-4">
-                  <Avatar className="h-9 w-9 border">
-                    <AvatarFallback className="bg-transparent p-1">
-                      <LogoIcon />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="max-w-xl rounded-lg bg-muted p-3 text-sm shadow-sm">
-                    <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
-                  </div>
-                </div>
+                      <p className="text-sm text-muted-foreground">
+                        {phraseOfTheDay.meaning}
+                      </p>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div>
+                      <h4 className="font-semibold">Origin Story</h4>
+                      <p className="text-muted-foreground">
+                        {phraseOfTheDay.story}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">Emotional Translations</h4>
+                      <div className="mt-2 space-y-2">
+                        {phraseOfTheDay.translations.map(t => (
+                          <div
+                            key={t.lang}
+                            className="flex items-center justify-between rounded-md bg-secondary p-2"
+                          >
+                            <div>
+                              <p className="font-medium">
+                                {t.lang}: "{t.text}"
+                              </p>
+                            </div>
+                            <Badge variant="outline">{t.emotion}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+
+          {state.history.map((message, index) => (
+            <div
+              key={index}
+              className={cn(
+                'flex items-start gap-4',
+                message.role === 'user' ? 'justify-end' : 'justify-start'
               )}
-              <div ref={messagesEndRef} />
+            >
+              {message.role === 'model' && (
+                <Avatar className="h-9 w-9 border">
+                  <AvatarFallback className="bg-transparent p-1">
+                    <LogoIcon />
+                  </AvatarFallback>
+                </Avatar>
+              )}
+              <div
+                className={cn(
+                  'max-w-xl rounded-lg p-3 text-sm shadow-sm',
+                  message.role === 'user'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-muted'
+                )}
+              >
+                {message.role === 'model' ? (
+                  <ReactMarkdown
+                    remarkPlugins={[remarkGfm]}
+                    className="prose prose-sm dark:prose-invert"
+                    components={{
+                      p: ({ node, ...props }) => (
+                        <p className="mb-2 last:mb-0" {...props} />
+                      ),
+                    }}
+                  >
+                    {message.content[0].text}
+                  </ReactMarkdown>
+                ) : (
+                  <p className="whitespace-pre-wrap">
+                    {message.content[0].text}
+                  </p>
+                )}
+              </div>
+              {message.role === 'user' && user && (
+                <Avatar className="h-9 w-9">
+                  {user.photoURL ? (
+                    <AvatarImage src={user.photoURL} alt="User Avatar" />
+                  ) : (
+                    userAvatar && (
+                      <AvatarImage
+                        src={userAvatar.imageUrl}
+                        alt="User Avatar"
+                        data-ai-hint={userAvatar.imageHint}
+                      />
+                    )
+                  )}
+                  <AvatarFallback>
+                    {user.displayName?.[0]?.toUpperCase() || 'U'}
+                  </AvatarFallback>
+                </Avatar>
+              )}
             </div>
-          </ScrollArea>
-        )}
-      </div>
+          ))}
+          {isPending && (
+            <div className="flex items-start justify-start gap-4">
+              <Avatar className="h-9 w-9 border">
+                <AvatarFallback className="bg-transparent p-1">
+                  <LogoIcon />
+                </AvatarFallback>
+              </Avatar>
+              <div className="max-w-xl rounded-lg bg-muted p-3 text-sm shadow-sm">
+                <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
 
       <div className="border-t">
         <div className="mx-auto max-w-3xl p-4">
@@ -444,7 +387,7 @@ export default function DashboardPage() {
               placeholder={
                 isListening
                   ? 'Listening...'
-                  : 'Ask about languages, idioms, or translations...'
+                  : "Ask about the phrase of the day, or anything else..."
               }
               autoComplete="off"
               disabled={isPending}
@@ -452,7 +395,11 @@ export default function DashboardPage() {
               value={queryText}
               onChange={e => setQueryText(e.target.value)}
             />
-            <Button type="submit" size="icon" disabled={isPending || !queryText}>
+            <Button
+              type="submit"
+              size="icon"
+              disabled={isPending || !queryText}
+            >
               <SendHorizonal className="h-5 w-5" />
               <span className="sr-only">Send message</span>
             </Button>
@@ -547,3 +494,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    
