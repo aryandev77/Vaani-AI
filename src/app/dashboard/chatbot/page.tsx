@@ -14,7 +14,7 @@ import {
   Video,
   X,
   FileImage,
-  Microphone,
+  Mic,
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -361,7 +361,7 @@ export default function RealTimeTranslationPage() {
                         isListening && 'text-destructive animate-pulse'
                       )}
                     >
-                      <Microphone className="h-5 w-5" />
+                      <Mic className="h-5 w-5" />
                       <span className="sr-only">
                         {isListening ? 'Stop listening' : 'Use microphone'}
                       </span>

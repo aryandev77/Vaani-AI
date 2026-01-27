@@ -12,7 +12,7 @@ import {
   Camera,
   Upload,
   Video,
-  Microphone,
+  Mic,
 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -228,9 +228,9 @@ export default function DashboardPage() {
                   fill="url(#logoGradient)"
                 />
                 <path
-                  d="M 6 9 L 10 17 Q 14 21 18 17 L 22 9"
+                  d="M 6 9 L 11 18 Q 14 21 17 18 L 22 9"
                   stroke="hsl(var(--primary-foreground))"
-                  strokeWidth="3"
+                  strokeWidth="3.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   fill="none"
@@ -433,7 +433,7 @@ export default function DashboardPage() {
                   isListening && 'text-destructive animate-pulse'
                 )}
               >
-                <Microphone className="h-5 w-5" />
+                <Mic className="h-5 w-5" />
                 <span className="sr-only">
                   {isListening ? 'Stop listening' : 'Use microphone'}
                 </span>
