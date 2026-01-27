@@ -15,6 +15,7 @@ export type InsightState = {
 
 export type EmotionState = {
   translatedText: string;
+  detectedEmotion?: string;
 };
 
 export type Conversation = {

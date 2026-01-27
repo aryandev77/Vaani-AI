@@ -9,6 +9,7 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -22,6 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { SubmitButton } from '@/components/submit-button';
+import { Badge } from '@/components/ui/badge';
 
 const languages = [
   { value: 'english', label: 'English' },
@@ -53,7 +55,7 @@ export default function EmotionPage() {
               <CardTitle>Original Text</CardTitle>
               <CardDescription>
                 Enter text and select a target language. The AI will preserve the emotion.
-              </-cardDescription>
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid w-full gap-2">
@@ -98,6 +100,16 @@ export default function EmotionPage() {
                 className="min-h-[150px] bg-secondary"
               />
             </CardContent>
+            {state.detectedEmotion && (
+              <CardFooter className="flex-col items-start gap-2">
+                <div className="w-full rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-900/50 dark:bg-blue-900/20">
+                    <p className="font-semibold text-blue-800 dark:text-blue-300">
+                      Detected Emotion
+                    </p>
+                    <Badge variant="secondary" className="mt-2 text-base">{state.detectedEmotion}</Badge>
+                  </div>
+              </CardFooter>
+            )}
           </Card>
         </div>
         <div className="mt-6 flex justify-center">

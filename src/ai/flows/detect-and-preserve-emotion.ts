@@ -19,6 +19,11 @@ export type DetectAndPreserveEmotionInput = z.infer<typeof DetectAndPreserveEmot
 
 const DetectAndPreserveEmotionOutputSchema = z.object({
   translatedText: z.string().describe('The translated text with preserved emotion and tone.'),
+  detectedEmotion: z
+    .string()
+    .describe(
+      'The primary emotion detected in the source text (e.g., Joy, Anger, Sadness, Surprise, Neutral).'
+    ),
 });
 export type DetectAndPreserveEmotionOutput = z.infer<typeof DetectAndPreserveEmotionOutputSchema>;
 
@@ -34,12 +39,13 @@ const prompt = ai.definePrompt({
   output: {schema: DetectAndPreserveEmotionOutputSchema},
   prompt: `You are an AI expert in detecting and preserving emotions in text translations.
 
-  Analyze the input text for its underlying emotion and tone. Translate the text into the target language while ensuring that the translated text conveys the same emotion and tone as the original text.
+  1.  **Analyze the Input Text**: Determine the primary underlying emotion and tone (e.g., Joy, Sadness, Anger, Surprise, Neutral).
+  2.  **Translate**: Translate the text into the target language, ensuring the translation conveys the *exact same emotion and tone* as the original.
+  3.  **Output**: Provide the translated text and the name of the emotion you detected.
 
   Input Text: {{{text}}}
   Target Language: {{{targetLanguage}}}
-
-  Translated Text:`, // The output schema description for translatedText should guide the model.
+  `,
 });
 
 const detectAndPreserveEmotionFlow = ai.defineFlow(

@@ -94,6 +94,7 @@ export async function handleEmotion(
 
   if (!text || !targetLanguage) {
     return {
+      ...prevState,
       translatedText: 'Error: Missing text or target language.',
     };
   }
@@ -102,10 +103,12 @@ export async function handleEmotion(
     const result = await detectAndPreserveEmotion({ text, targetLanguage });
     return {
       translatedText: result.translatedText,
+      detectedEmotion: result.detectedEmotion,
     };
   } catch (error) {
     console.error(error);
     return {
+      ...prevState,
       translatedText: 'Error: Could not perform emotion-aware translation.',
     };
   }
