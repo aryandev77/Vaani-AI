@@ -110,12 +110,14 @@ export default function ProfilePage() {
         orderBy('date', 'desc'),
         limit(3)
       );
-      const unsubscribeTranslations = onSnapshot(snapshot => {
+      const unsubscribeTranslations = onSnapshot(translationsQuery, snapshot => {
         const newTranslations = snapshot.docs.map(doc => ({
           id: doc.id,
           ...(doc.data() as Omit<Translation, 'id'>),
         }));
         setTranslations(newTranslations);
+      }, error => {
+        console.error('Error fetching recent translations:', error);
       });
 
       return () => {
