@@ -103,6 +103,7 @@ export default function ProfilePage() {
   const [dayStreak, setDayStreak] = useState(21);
   const [isSubscribed, setIsSubscribed] = useState(false); // Toggle this to see different states
   const [remainingRestores, setRemainingRestores] = useState(3);
+  const [isFounder, setIsFounder] = useState(false);
   // --- End Mock State ---
 
   useEffect(() => {
@@ -128,6 +129,13 @@ export default function ProfilePage() {
           }))
         );
       });
+      
+      if (typeof window !== 'undefined') {
+        const adminStatus = localStorage.getItem('isAdmin');
+        if (adminStatus === 'true') {
+          setIsFounder(true);
+        }
+      }
 
       return () => {
         unsubscribeProfile();
@@ -140,9 +148,9 @@ export default function ProfilePage() {
   
   const handleRestoreStreak = () => {
     // This is where you would put the real logic to update Firestore
-    if (isSubscribed) {
+    if (isSubscribed || isFounder) {
       setDayStreak(prev => prev + 1); // Or whatever logic to restore
-      toast({ title: 'Streak Restored!', description: 'Your streak is safe thanks to your subscription.' });
+      toast({ title: 'Streak Restored!', description: 'Your streak is safe thanks to your special status.' });
     } else if (remainingRestores > 0) {
       setRemainingRestores(prev => prev - 1);
       setDayStreak(prev => prev + 1);
@@ -180,8 +188,8 @@ export default function ProfilePage() {
     );
   }
 
-  const canRestore = isSubscribed || remainingRestores > 0;
-  const noRestoresLeft = !isSubscribed && remainingRestores === 0;
+  const canRestore = isSubscribed || isFounder || remainingRestores > 0;
+  const noRestoresLeft = !isSubscribed && !isFounder && remainingRestores === 0;
 
   return (
     <div className="w-full">
@@ -258,8 +266,8 @@ export default function ProfilePage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>Restore Your Streak?</AlertDialogTitle>
                       <AlertDialogDescription>
-                        {isSubscribed 
-                          ? "You have unlimited restores with your subscription. Your streak will be saved!"
+                        {isSubscribed || isFounder
+                          ? "As a founder, you have unlimited restores. Your streak will be saved!"
                           : `This will use one of your ${remainingRestores} free restores for this month.`
                         }
                       </AlertDialogDescription>
@@ -289,7 +297,7 @@ export default function ProfilePage() {
                   </AlertDialogContent>
               )}
             </AlertDialog>
-             {!isSubscribed && (
+             {!(isSubscribed || isFounder) && (
               <p className="mt-1 text-xs text-muted-foreground">
                 {remainingRestores} free restores left
               </p>

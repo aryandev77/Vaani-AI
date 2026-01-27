@@ -223,10 +223,20 @@ const LiveCallInterface = () => {
 
 export default function LiveCallPage() {
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isFounder, setIsFounder] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const adminStatus = localStorage.getItem('isAdmin');
+      if (adminStatus === 'true') {
+        setIsFounder(true);
+      }
+    }
+  }, []);
   
   return (
     <div className="flex h-full items-center justify-center">
-      {isSubscribed ? <LiveCallInterface /> : <UpgradeView onUpgrade={() => setIsSubscribed(true)} />}
+      {isSubscribed || isFounder ? <LiveCallInterface /> : <UpgradeView onUpgrade={() => setIsSubscribed(true)} />}
     </div>
   );
 }
