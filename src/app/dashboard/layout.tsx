@@ -52,7 +52,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard/history': 'Conversation History',
       '/dashboard/about': 'About Vaani AI',
       '/dashboard/profile': 'Your Profile',
-      '/dashboard/billing': 'Billing',
       '/dashboard/settings': 'Settings',
       '/dashboard/game': 'Language Games',
       '/dashboard/spiritual-texts': 'Spiritual Texts',

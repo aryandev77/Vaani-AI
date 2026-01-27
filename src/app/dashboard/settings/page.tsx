@@ -24,6 +24,7 @@ import {
   Trash2,
   User,
   Palette,
+  CreditCard,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -257,7 +258,7 @@ export default function SettingsPage() {
 
   return (
     <Tabs defaultValue="account" className="mx-auto max-w-2xl">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="account">
           <User className="mr-2" />
           Account
@@ -265,6 +266,10 @@ export default function SettingsPage() {
         <TabsTrigger value="appearance">
           <Palette className="mr-2" />
           Appearance
+        </TabsTrigger>
+        <TabsTrigger value="billing">
+          <CreditCard className="mr-2" />
+          Billing
         </TabsTrigger>
         <TabsTrigger value="security">
           <KeyRound className="mr-2" />
@@ -391,6 +396,20 @@ export default function SettingsPage() {
               </TabsList>
             </Tabs>
           </CardContent>
+        </Card>
+      </TabsContent>
+      
+      <TabsContent value="billing" className="mt-6">
+        <Card>
+            <CardHeader>
+            <CardTitle>Billing & Subscriptions</CardTitle>
+            <CardDescription>
+                Manage your billing information and subscription plan.
+            </CardDescription>
+            </CardHeader>
+            <CardContent>
+            <p>Billing page is under construction.</p>
+            </CardContent>
         </Card>
       </TabsContent>
 
