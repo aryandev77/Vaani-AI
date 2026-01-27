@@ -26,6 +26,7 @@ import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
   return (
@@ -177,16 +178,32 @@ const LiveCallInterface = () => {
             </div>
             
             <div className="absolute right-4 top-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary shadow-md md:h-32 md:w-56">
-                {isCameraOff || hasCameraPermission === false ? (
-                    <div className="flex h-full w-full items-center justify-center bg-secondary">
+                <video ref={videoRef} className="h-full w-full -scale-x-100 object-cover bg-secondary" autoPlay muted playsInline />
+                
+                {(isCameraOff || hasCameraPermission === false) && !isCameraOff &&(
+                     <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary">
                         <VideoOff className="h-8 w-8 text-muted-foreground" />
                     </div>
-                ) : hasCameraPermission === null ? (
-                    <div className="flex h-full w-full items-center justify-center bg-secondary">
+                )}
+                
+                {isCameraOff && (
+                    <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary">
+                        <VideoOff className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                )}
+
+                {hasCameraPermission === null && !isCameraOff && (
+                     <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary/80">
                         <Video className="h-8 w-8 text-muted-foreground animate-pulse" />
                     </div>
-                ) : (
-                    <video ref={videoRef} className="h-full w-full -scale-x-100 object-cover" autoPlay muted playsInline />
+                )}
+
+                {hasCameraPermission === false && (
+                    <div className="absolute inset-0 flex items-center justify-center bg-destructive/90 p-2 text-center">
+                       <Alert variant="destructive" className="border-0 bg-transparent text-destructive-foreground">
+                            <AlertTitle className="text-sm font-bold">Camera Denied</AlertTitle>
+                        </Alert>
+                    </div>
                 )}
             </div>
 
