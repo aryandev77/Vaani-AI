@@ -82,7 +82,7 @@ const mockTranscript = [
 const LiveCallInterface = () => {
     const { toast } = useToast();
     const videoRef = useRef<HTMLVideoElement>(null);
-    const [hasCameraPermission, setHasCameraPermission] = useState(true);
+    const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
     const [isMuted, setIsMuted] = useState(false);
     const [isCameraOff, setIsCameraOff] = useState(false);
     const [transcript, setTranscript] = useState<(typeof mockTranscript)>([]);
@@ -113,6 +113,15 @@ const LiveCallInterface = () => {
 
     useEffect(() => {
         const getCameraPermission = async () => {
+            if (isCameraOff) {
+                 if (videoRef.current?.srcObject) {
+                    const stream = videoRef.current.srcObject as MediaStream;
+                    stream.getTracks().forEach(track => track.stop());
+                    videoRef.current.srcObject = null;
+                }
+                return;
+            }
+
           try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
             setHasCameraPermission(true);
@@ -131,13 +140,7 @@ const LiveCallInterface = () => {
           }
         };
     
-        if (!isCameraOff) {
-            getCameraPermission();
-        } else if (videoRef.current?.srcObject) {
-            const stream = videoRef.current.srcObject as MediaStream;
-            stream.getTracks().forEach(track => track.stop());
-            videoRef.current.srcObject = null;
-        }
+        getCameraPermission();
 
         return () => {
             if (videoRef.current?.srcObject) {
@@ -174,12 +177,16 @@ const LiveCallInterface = () => {
             </div>
             
             <div className="absolute right-4 top-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary shadow-md md:h-32 md:w-56">
-                {isCameraOff || !hasCameraPermission ? (
+                {isCameraOff || hasCameraPermission === false ? (
                     <div className="flex h-full w-full items-center justify-center bg-secondary">
                         <VideoOff className="h-8 w-8 text-muted-foreground" />
                     </div>
+                ) : hasCameraPermission === null ? (
+                    <div className="flex h-full w-full items-center justify-center bg-secondary">
+                        <Video className="h-8 w-8 text-muted-foreground animate-pulse" />
+                    </div>
                 ) : (
-                    <video ref={videoRef} className="h-full w-full -scale-x-100 object-cover" autoPlay muted />
+                    <video ref={videoRef} className="h-full w-full -scale-x-100 object-cover" autoPlay muted playsInline />
                 )}
             </div>
 
