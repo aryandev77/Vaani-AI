@@ -637,3 +637,5 @@ export default function RealTimeTranslationPage() {
     </div>
   );
 }
+
+    
