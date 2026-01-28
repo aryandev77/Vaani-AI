@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -11,31 +10,39 @@ declare global {
   }
 }
 
-export const useSpeechRecognition = (onTranscriptChange: (transcript: string) => void) => {
+type UseSpeechRecognitionProps = {
+  onTranscriptChange: (transcript: string) => void;
+  lang: string;
+};
+
+export const useSpeechRecognition = ({
+  onTranscriptChange,
+  lang,
+}: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const recognitionRef = useRef<any | null>(null);
 
   useEffect(() => {
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
 
     if (SpeechRecognition) {
       setIsAvailable(true);
       const recognition = new SpeechRecognition();
       recognition.continuous = true;
       recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.lang = lang; // Use the passed language
 
+      // This is the correct way to handle results to avoid duplication.
+      let finalTranscript = '';
       recognition.onresult = (event: any) => {
         let interimTranscript = '';
-        let finalTranscript = '';
-
-        for (let i = 0; i < event.results.length; i++) {
-          const transcriptPart = event.results[i][0].transcript;
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
-            finalTranscript += transcriptPart;
+            finalTranscript += event.results[i][0].transcript;
           } else {
-            interimTranscript += transcriptPart;
+            interimTranscript += event.results[i][0].transcript;
           }
         }
         onTranscriptChange(finalTranscript + interimTranscript);
@@ -45,29 +52,40 @@ export const useSpeechRecognition = (onTranscriptChange: (transcript: string) =>
         console.error('Speech recognition error:', event.error);
         setIsListening(false);
       };
-      
+
       recognition.onend = () => {
         setIsListening(false);
       };
 
+      recognition.onstart = () => {
+        finalTranscript = ''; // Reset final transcript on new start
+      };
+
       recognitionRef.current = recognition;
+
+      // Clean up previous recognition instance
+      return () => {
+        recognition.stop();
+      };
     } else {
       setIsAvailable(false);
     }
-  }, [onTranscriptChange]);
+  }, [onTranscriptChange, lang]);
 
   const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-    } else {
-      onTranscriptChange('');
-      recognitionRef.current?.start();
-      setIsListening(true);
+    if (recognitionRef.current) {
+        if (isListening) {
+          recognitionRef.current.stop();
+          setIsListening(false);
+        } else {
+          onTranscriptChange('');
+          recognitionRef.current.start();
+          setIsListening(true);
+        }
     }
   };
 
-  // Stop listening when component unmounts
+  // Stop listening when component unmounts for safety
   useEffect(() => {
     return () => {
       if (recognitionRef.current) {
