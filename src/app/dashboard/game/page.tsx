@@ -563,7 +563,7 @@ export default function GamePage() {
   const isPremiumUser = isSubscribed || isFounder;
 
   return (
-    <div className="flex h-full items-center justify-center">
+    <div className="flex h-full flex-col items-center justify-center">
       <AnimatePresence mode="wait">
         {gameState === 'menu' && (
           <motion.div
