@@ -9,10 +9,11 @@ import {
   Video,
   VideoOff,
   Mic,
-  MicOff,
   PhoneOff,
   User,
   Settings2,
+  LoaderCircle,
+  Languages,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,6 +28,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
+import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
+import { textToSpeech } from '@/ai/flows/text-to-speech';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
   return (
@@ -39,8 +51,8 @@ const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
           Unlock Live Call Translation
         </CardTitle>
         <CardDescription>
-          This is a premium feature. Translate voice and video calls in real-time
-          with cultural context.
+          This is a premium feature. Translate voice and video calls in
+          real-time with cultural context.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -57,193 +69,356 @@ const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
           <li>Communicate seamlessly with anyone, anywhere, in any language.</li>
         </ul>
         <div className="flex flex-col gap-2">
-            <Button size="lg" asChild className="mt-4 w-full">
-                <Link href="/dashboard/billing">
-                <Sparkles className="mr-2 h-5 w-5" />
-                Upgrade to Pro
-                </Link>
-            </Button>
-            <Button size="lg" variant="outline" onClick={onUpgrade} className="w-full">
-                Simulate Subscription
-            </Button>
+          <Button size="lg" asChild className="mt-4 w-full">
+            <Link href="/dashboard/billing">
+              <Sparkles className="mr-2 h-5 w-5" />
+              Upgrade to Pro
+            </Link>
+          </Button>
+          <Button
+            size="lg"
+            variant="outline"
+            onClick={onUpgrade}
+            className="w-full"
+          >
+            Simulate Subscription
+          </Button>
         </div>
       </CardContent>
     </Card>
   );
 };
 
-const mockTranscript = [
-    { speaker: 'other', text: 'Hola, ¿cómo estás?', translation: 'Hello, how are you?' },
-    { speaker: 'me', text: "I'm doing well, thank you! How about you?", translation: '¡Estoy bien, gracias! ¿Y usted?' },
-    { speaker: 'other', text: 'Muy bien. Quería preguntarte sobre el proyecto.', translation: 'Very good. I wanted to ask you about the project.' },
-    { speaker: 'me', text: 'Of course, what do you need to know?', translation: 'Por supuesto, ¿qué necesitas saber?' },
-    { speaker: 'other', text: '¿Cuál es la fecha límite para la primera fase?', translation: 'What is the deadline for the first phase?' },
+// --- Demo Logic ---
+type TranscriptItem = {
+  id: number;
+  speaker: 'me' | 'other';
+  englishText: string;
+  foreignText: string;
+  language: string;
+};
+
+const botResponses = [
+  "I'm doing great, thanks for asking. So, about that project, have you made any progress on the design mockups?",
+  "That sounds promising. What's the new timeline looking like for the first phase?",
+  "Okay, that works. Let's aim to have the final review by the end of next week then. Does that sound good to you?",
+  'Perfect. I\'ll check back in a couple of days. Keep up the great work!',
+  'You too. Goodbye!',
 ];
+let botResponseIndex = 0;
+
+const demoLanguages = [
+  { value: 'hindi', label: 'Hindi' },
+  { value: 'bengali', label: 'Bengali' },
+  { value: 'spanish', label: 'Spanish' },
+  { value: 'french', label: 'French' },
+  { value: 'german', label: 'German' },
+];
+// --- End Demo Logic ---
 
 const LiveCallInterface = () => {
-    const { toast } = useToast();
-    const videoRef = useRef<HTMLVideoElement>(null);
-    const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
-    const [isMuted, setIsMuted] = useState(false);
-    const [isCameraOff, setIsCameraOff] = useState(false);
-    const [transcript, setTranscript] = useState<(typeof mockTranscript)>([]);
-    const [callTime, setCallTime] = useState(0);
+  const { toast } = useToast();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<
+    boolean | null
+  >(null);
+  const [isCameraOff, setIsCameraOff] = useState(false);
+  const [callTime, setCallTime] = useState(0);
 
-    useEffect(() => {
-        // Mock transcript appearing over time
-        let index = 0;
-        const interval = setInterval(() => {
-            if (index < mockTranscript.length) {
-                setTranscript(prev => [...prev, mockTranscript[index]]);
-                index++;
-            } else {
-                clearInterval(interval);
-            }
-        }, 3000);
+  // New states for interactive demo
+  const [transcript, setTranscript] = useState<TranscriptItem[]>([]);
+  const [isBotThinking, setIsBotThinking] = useState(false);
+  const [userLanguage, setUserLanguage] = useState('hindi');
+  const [userTranscript, setUserTranscript] = useState('');
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const transcriptEndRef = useRef<HTMLDivElement>(null);
 
-        // Call timer
-        const timer = setInterval(() => {
-            setCallTime(t => t + 1);
-        }, 1000);
+  // Speech recognition hook
+  const { isListening, isAvailable, toggleListening } =
+    useSpeechRecognition(setUserTranscript);
 
-        return () => {
-            clearInterval(interval);
-            clearInterval(timer);
+  // Call timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCallTime(t => t + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+  
+  // Handle user speech processing
+  useEffect(() => {
+    const processTurn = async () => {
+      if (userTranscript) {
+         // 1. Translate user's speech to English
+        const { translatedText: englishTranslation } =
+          await realTimeTranslationWithContext({
+            text: userTranscript,
+            sourceLanguage: userLanguage,
+            targetLanguage: 'english',
+          });
+
+        // 2. Add user's turn to transcript
+        const userTurn: TranscriptItem = {
+          id: Date.now(),
+          speaker: 'me',
+          englishText: englishTranslation || '...',
+          foreignText: userTranscript,
+          language: userLanguage,
         };
-    }, []);
+        setTranscript(prev => [...prev, userTurn]);
+        setUserTranscript(''); // Clear after processing
 
-    useEffect(() => {
-        const getCameraPermission = async () => {
-            if (isCameraOff) {
-                 if (videoRef.current?.srcObject) {
-                    const stream = videoRef.current.srcObject as MediaStream;
-                    stream.getTracks().forEach(track => track.stop());
-                    videoRef.current.srcObject = null;
-                }
-                return;
-            }
+        // 3. Trigger bot's turn
+        setIsBotThinking(true);
+        setTimeout(async () => {
+             // 3a. Get next pre-canned English response
+            const botEnglishResponse = botResponses[botResponseIndex % botResponses.length];
+            botResponseIndex++;
 
-          try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-            setHasCameraPermission(true);
-    
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream;
-            }
-          } catch (error) {
-            console.error('Error accessing camera:', error);
-            setHasCameraPermission(false);
-            toast({
-              variant: 'destructive',
-              title: 'Camera Access Denied',
-              description: 'Please enable camera permissions in your browser settings to use this feature.',
+            // 3b. Translate bot's English response to user's language
+            const { translatedText: botForeignResponse } =
+            await realTimeTranslationWithContext({
+                text: botEnglishResponse,
+                sourceLanguage: 'english',
+                targetLanguage: userLanguage,
             });
-          }
-        };
-    
-        getCameraPermission();
+            
+             // 3c. Add bot's turn to transcript
+            const botTurn: TranscriptItem = {
+                id: Date.now() + 1,
+                speaker: 'other',
+                englishText: botEnglishResponse,
+                foreignText: botForeignResponse || '...',
+                language: userLanguage,
+            };
+            setTranscript(prev => [...prev, botTurn]);
+            setIsBotThinking(false);
 
-        return () => {
-            if (videoRef.current?.srcObject) {
-                const stream = videoRef.current.srcObject as MediaStream;
-                stream.getTracks().forEach(track => track.stop());
+            // 3d. Get TTS for bot's foreign language response and play it
+            if (botForeignResponse) {
+                const { audioData } = await textToSpeech(botForeignResponse);
+                if (audioData && audioRef.current) {
+                audioRef.current.src = audioData;
+                audioRef.current.play();
+                }
             }
-        }
-      }, [isCameraOff, toast]);
-
-    const formatTime = (seconds: number) => {
-        const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-        const secs = (seconds % 60).toString().padStart(2, '0');
-        return `${mins}:${secs}`;
+        }, 1000 + Math.random() * 1000);
+      }
+    };
+    
+    if (!isListening) {
+        processTurn();
     }
+  }, [isListening, userTranscript, userLanguage]);
 
-    const remoteUser = getPlaceholderImage('remote-user-avatar');
+  // Scroll transcript to bottom
+  useEffect(() => {
+    transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [transcript, isBotThinking]);
 
+  // Camera permission logic
+  useEffect(() => {
+    const getCameraPermission = async () => {
+      if (isCameraOff) {
+        if (videoRef.current?.srcObject) {
+          const stream = videoRef.current.srcObject as MediaStream;
+          stream.getTracks().forEach(track => track.stop());
+          videoRef.current.srcObject = null;
+        }
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        setHasCameraPermission(true);
+
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (error) {
+        console.error('Error accessing camera:', error);
+        setHasCameraPermission(false);
+        toast({
+          variant: 'destructive',
+          title: 'Camera Access Denied',
+          description:
+            'Please enable camera permissions in your browser settings to use this feature.',
+        });
+      }
+    };
+
+    getCameraPermission();
+
+    return () => {
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [isCameraOff, toast]);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, '0');
+    const secs = (seconds % 60).toString().padStart(2, '0');
+    return `${mins}:${secs}`;
+  };
+
+  const remoteUser = getPlaceholderImage('remote-user-avatar');
 
   return (
     <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3">
-        <div className="relative col-span-1 flex flex-col gap-4 lg:col-span-2">
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-lg">
-                {remoteUser && <Image src={remoteUser.imageUrl} layout="fill" objectFit="cover" alt="Remote user" className="opacity-50" />}
-                <div className="absolute inset-0 flex items-center justify-center">
-                    <Avatar className="h-32 w-32 border-4 border-background/50">
-                        {remoteUser && <AvatarImage src={remoteUser.imageUrl} />}
-                        <AvatarFallback className="text-4xl"><User /></AvatarFallback>
-                    </Avatar>
-                </div>
-                 <div className="absolute bottom-4 left-4 rounded-lg bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur-sm">
-                    <p className="font-bold">Ana García</p>
-                    <p className="text-xs">{formatTime(callTime)}</p>
-                </div>
-            </div>
-            
-            <div className="absolute right-4 top-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary shadow-md md:h-32 md:w-56">
-                <video ref={videoRef} className="h-full w-full -scale-x-100 object-cover bg-secondary" autoPlay muted playsInline />
-                
-                {(isCameraOff || hasCameraPermission === false) && !isCameraOff &&(
-                     <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary">
-                        <VideoOff className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                )}
-                
-                {isCameraOff && (
-                    <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary">
-                        <VideoOff className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                )}
-
-                {hasCameraPermission === null && !isCameraOff && (
-                     <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary/80">
-                        <Video className="h-8 w-8 text-muted-foreground animate-pulse" />
-                    </div>
-                )}
-
-                {hasCameraPermission === false && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-destructive/90 p-2 text-center">
-                       <Alert variant="destructive" className="border-0 bg-transparent text-destructive-foreground">
-                            <AlertTitle className="text-sm font-bold">Camera Denied</AlertTitle>
-                        </Alert>
-                    </div>
-                )}
-            </div>
-
-            <div className="flex items-center justify-center gap-4 rounded-lg bg-card p-2">
-                <Button variant={isMuted ? "destructive" : "outline"} size="icon" className="h-14 w-14 rounded-full" onClick={() => setIsMuted(!isMuted)}>
-                    {isMuted ? <MicOff /> : <Mic />}
-                </Button>
-                 <Button variant={isCameraOff ? "destructive" : "outline"} size="icon" className="h-14 w-14 rounded-full" onClick={() => setIsCameraOff(!isCameraOff)}>
-                    {isCameraOff ? <VideoOff /> : <Video />}
-                </Button>
-                <Button variant="destructive" size="icon" className="h-14 w-14 rounded-full">
-                    <PhoneOff />
-                </Button>
-                <Button variant="outline" size="icon" className="h-14 w-14 rounded-full">
-                    <Settings2 />
-                </Button>
-            </div>
+      <div className="relative col-span-1 flex flex-col gap-4 lg:col-span-2">
+        <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-black shadow-lg">
+          {remoteUser && (
+            <Image
+              src={remoteUser.imageUrl}
+              layout="fill"
+              objectFit="cover"
+              alt="Remote user"
+              className="opacity-50"
+            />
+          )}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Avatar className="h-32 w-32 border-4 border-background/50">
+              {remoteUser && <AvatarImage src={remoteUser.imageUrl} />}
+              <AvatarFallback className="text-4xl">
+                <User />
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <div className="absolute bottom-4 left-4 rounded-lg bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur-sm">
+            <p className="font-bold">Ana García</p>
+            <p className="text-xs">{formatTime(callTime)}</p>
+          </div>
         </div>
-        <Card className="col-span-1 flex flex-col">
-            <CardHeader>
-                <CardTitle>Live Transcript</CardTitle>
-                <CardDescription>English / Spanish</CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 overflow-y-auto">
-                 <div className="space-y-6">
-                    {transcript.map((item, index) => (
-                        <div key={index} className={cn("flex flex-col", item.speaker === 'me' ? 'items-end' : 'items-start')}>
-                            <div className={cn("max-w-xs rounded-lg p-3 text-sm", item.speaker === 'me' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                                <p className="font-bold">{item.translation}</p>
-                                <p className="opacity-80">{item.text}</p>
-                            </div>
-                            <p className="mt-1 text-xs text-muted-foreground">{item.speaker === 'me' ? "You" : "Ana García"}</p>
-                        </div>
-                    ))}
-                 </div>
-            </CardContent>
-        </Card>
+
+        <div className="absolute right-4 top-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary shadow-md md:h-32 md:w-56">
+          <video
+            ref={videoRef}
+            className="h-full w-full -scale-x-100 transform bg-secondary object-cover"
+            autoPlay
+            muted
+            playsInline
+          />
+
+          {isCameraOff && (
+            <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary">
+              <VideoOff className="h-8 w-8 text-muted-foreground" />
+            </div>
+          )}
+
+            {hasCameraPermission === null && !isCameraOff && (
+                <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary/80">
+                <Video className="h-8 w-8 animate-pulse text-muted-foreground" />
+                </div>
+            )}
+
+          {hasCameraPermission === false && !isCameraOff && (
+            <div className="absolute inset-0 flex items-center justify-center bg-destructive/90 p-2 text-center">
+              <Alert
+                variant="destructive"
+                className="border-0 bg-transparent text-destructive-foreground"
+              >
+                <AlertTitle className="text-sm font-bold">
+                  Camera Denied
+                </AlertTitle>
+              </Alert>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center justify-center gap-4 rounded-lg bg-card p-2">
+          <Button
+            variant={isListening ? 'destructive' : 'default'}
+            size="icon"
+            className="h-14 w-14 rounded-full"
+            onClick={toggleListening}
+            disabled={!isAvailable}
+          >
+            <Mic />
+          </Button>
+          <Button
+            variant={isCameraOff ? 'destructive' : 'outline'}
+            size="icon"
+            className="h-14 w-14 rounded-full"
+            onClick={() => setIsCameraOff(!isCameraOff)}
+          >
+            {isCameraOff ? <VideoOff /> : <Video />}
+          </Button>
+          <Button variant="destructive" size="icon" className="h-14 w-14 rounded-full">
+            <PhoneOff />
+          </Button>
+          <Button variant="outline" size="icon" className="h-14 w-14 rounded-full">
+            <Settings2 />
+          </Button>
+        </div>
+      </div>
+      <Card className="col-span-1 flex flex-col">
+        <CardHeader>
+          <CardTitle>Live Translation Demo</CardTitle>
+          <div className="pt-2">
+            <Label htmlFor="user-language">Your Language</Label>
+            <Select value={userLanguage} onValueChange={setUserLanguage} disabled={isListening}>
+              <SelectTrigger id="user-language">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {demoLanguages.map(l => (
+                  <SelectItem key={l.value} value={l.value}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 overflow-y-auto">
+          <div className="space-y-6">
+            {transcript.map(item => (
+              <div
+                key={item.id}
+                className={cn(
+                  'flex flex-col',
+                  item.speaker === 'me' ? 'items-end' : 'items-start'
+                )}
+              >
+                <div
+                  className={cn(
+                    'max-w-xs rounded-lg p-3 text-sm',
+                    item.speaker === 'me'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted'
+                  )}
+                >
+                  <p className="font-bold">{item.foreignText}</p>
+                  <p className="italic opacity-80">{item.englishText}</p>
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {item.speaker === 'me' ? 'You' : 'Ana García'}
+                </p>
+              </div>
+            ))}
+            {isBotThinking && (
+                 <div className="flex flex-col items-start">
+                    <div className="max-w-xs rounded-lg bg-muted p-3 text-sm">
+                        <LoaderCircle className="h-5 w-5 animate-spin" />
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">Ana García</p>
+                </div>
+            )}
+            <div ref={transcriptEndRef} />
+          </div>
+        </CardContent>
+      </Card>
+      <audio ref={audioRef} className="hidden" />
     </div>
-  )
-}
+  );
+};
 
 export default function LiveCallPage() {
   const [isSubscribed, setIsSubscribed] = useState(false);
@@ -273,12 +448,14 @@ export default function LiveCallPage() {
       description: 'You can now access the Live Call feature.',
     });
   };
-  
+
   return (
     <div className="flex h-full items-center justify-center">
-      {isSubscribed || isFounder ? <LiveCallInterface /> : <UpgradeView onUpgrade={handleUpgradeSimulation} />}
+      {isSubscribed || isFounder ? (
+        <LiveCallInterface />
+      ) : (
+        <UpgradeView onUpgrade={handleUpgradeSimulation} />
+      )}
     </div>
   );
 }
-
-    

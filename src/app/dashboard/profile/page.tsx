@@ -36,7 +36,6 @@ import {
   Zap,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { LoadingIndicator } from '@/components/loading-indicator';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -97,7 +96,6 @@ export default function ProfilePage() {
   const userAvatarPlaceholder = getPlaceholderImage('user-avatar');
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [translations, setTranslations] = useState<Translation[]>([]);
-  const [loading, setLoading] = useState(true);
 
   // --- Mock State for Subscription & Streak ---
   const [dayStreak, setDayStreak] = useState(21);
@@ -113,7 +111,6 @@ export default function ProfilePage() {
         if (docSnap.exists()) {
           setProfile(docSnap.data() as UserProfile);
         }
-        setLoading(false);
       });
 
       const translationsQuery = query(
@@ -145,8 +142,6 @@ export default function ProfilePage() {
         unsubscribeProfile();
         unsubscribeTranslations();
       };
-    } else if (user === null) {
-      setLoading(false);
     }
   }, [user, firestore]);
   
@@ -169,9 +164,6 @@ export default function ProfilePage() {
     profile?.spokenLanguages?.split(',').map(lang => lang.trim()).filter(Boolean) ||
     [];
 
-  if (loading) {
-    return <LoadingIndicator className="h-full" />;
-  }
 
   if (!user) {
     return (
