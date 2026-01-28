@@ -147,43 +147,54 @@ const LiveCallInterface = () => {
           translatedText: 'Translating...',
         };
         setConversation(prev => [...prev, userTurn]);
+        const currentTranscript = userTranscript; // Capture transcript before clearing
         setUserTranscript(''); // Clear the raw transcript
 
         // 2. Translate user's speech to English for the bot
         const { translatedText: englishTranslation } =
           await realTimeTranslationWithContext({
-            text: userTurn.originalText,
+            text: currentTranscript,
             sourceLanguage: userLanguage,
             targetLanguage: 'english',
           });
-        
-        // Update the user's turn in the UI with the English translation
-        setConversation(prev => prev.map(t => t.id === userTurn.id ? {...t, translatedText: englishTranslation} : t));
 
-        // 3. Add to chat history for context
-        const userHistoryItem: ChatHistoryItem = { role: 'user', content: [{ text: englishTranslation }] };
-        const newChatHistory = [...chatHistory, userHistoryItem];
-        setChatHistory(newChatHistory);
+        // Update the user's turn in the UI with the English translation
+        setConversation(prev =>
+          prev.map(t =>
+            t.id === userTurn.id ? { ...t, translatedText: englishTranslation } : t
+          )
+        );
+
+        // 3. Add to chat history for context, creating a new history for this turn
+        const userHistoryItem: ChatHistoryItem = {
+          role: 'user',
+          content: [{ text: englishTranslation }],
+        };
+        const historyForThisTurn = [...chatHistory, userHistoryItem];
 
         // 4. Trigger bot's response
         setIsBotThinking(true);
         const { response: botEnglishResponse } = await chatWithBot({
-            query: englishTranslation,
-            history: chatHistory,
+          query: englishTranslation,
+          history: historyForThisTurn, // Use the up-to-date history
         });
 
-        const botHistoryItem: ChatHistoryItem = { role: 'model', content: [{ text: botEnglishResponse }] };
-        setChatHistory(prev => [...prev, botHistoryItem]);
-        
-        // 5. Translate bot's English response back to the user's language
+        // 5. Update the full chat history with both the user's and bot's turn
+        const botHistoryItem: ChatHistoryItem = {
+          role: 'model',
+          content: [{ text: botEnglishResponse }],
+        };
+        setChatHistory([...historyForThisTurn, botHistoryItem]);
+
+        // 6. Translate bot's English response back to the user's language
         const { translatedText: botForeignResponse } =
           await realTimeTranslationWithContext({
             text: botEnglishResponse,
             sourceLanguage: 'english',
             targetLanguage: userLanguage,
           });
-        
-        // 6. Add bot's turn to conversation display
+
+        // 7. Add bot's turn to conversation display
         const botTurn: TranscriptItem = {
           id: Date.now() + 1,
           speaker: 'other',
@@ -193,7 +204,7 @@ const LiveCallInterface = () => {
         setConversation(prev => [...prev, botTurn]);
         setIsBotThinking(false);
 
-        // 7. Generate and play audio for the bot's translated response
+        // 8. Generate and play audio for the bot's translated response
         if (botForeignResponse) {
           const { audioData } = await textToSpeech(botForeignResponse);
           if (audioData && audioRef.current) {
@@ -217,18 +228,19 @@ const LiveCallInterface = () => {
 
   // Camera permission logic
   useEffect(() => {
+    let stream: MediaStream | null = null;
     const getCameraPermission = async () => {
       if (isCameraOff) {
         if (videoRef.current?.srcObject) {
-          const stream = videoRef.current.srcObject as MediaStream;
-          stream.getTracks().forEach(track => track.stop());
+          const currentStream = videoRef.current.srcObject as MediaStream;
+          currentStream.getTracks().forEach(track => track.stop());
           videoRef.current.srcObject = null;
         }
         return;
       }
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        stream = await navigator.mediaDevices.getUserMedia({ video: true });
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
@@ -248,8 +260,7 @@ const LiveCallInterface = () => {
     getCameraPermission();
 
     return () => {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream;
+      if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
@@ -358,11 +369,13 @@ export default function LiveCallPage() {
   };
 
   return (
-    <div className="flex h-full items-center justify-center">
+    <div className="h-full">
       {isSubscribed || isFounder ? (
         <LiveCallInterface />
       ) : (
-        <UpgradeView onUpgrade={handleUpgradeSimulation} />
+        <div className="flex h-full items-center justify-center">
+          <UpgradeView onUpgrade={handleUpgradeSimulation} />
+        </div>
       )}
     </div>
   );
