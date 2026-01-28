@@ -33,8 +33,34 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
+
+const SuggestionCard = ({
+  title,
+  description,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  onClick: () => void;
+}) => (
+  <Card
+    className="cursor-pointer transition-all hover:bg-muted/50"
+    onClick={onClick}
+  >
+    <CardHeader>
+      <CardTitle className="text-base">{title}</CardTitle>
+      <CardDescription className="text-sm">{description}</CardDescription>
+    </CardHeader>
+  </Card>
+);
 
 export default function DashboardPage() {
   const user = useUser();
@@ -77,6 +103,10 @@ export default function DashboardPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [state.history, isPending]);
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setQueryText(suggestion);
+  };
 
   const openCamera = async () => {
     setIsCameraDialogOpen(true);
@@ -237,6 +267,46 @@ export default function DashboardPage() {
               )}
             </div>
           ))}
+          {state.history.length === 1 && !isPending && (
+            <div className="space-y-4 pt-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <SuggestionCard
+                  title="Explain an idiom"
+                  description="e.g., 'Bite the bullet'"
+                  onClick={() =>
+                    handleSuggestionClick("Explain the idiom 'Bite the bullet'")
+                  }
+                />
+                <SuggestionCard
+                  title="Translate with context"
+                  description="e.g., 'How are you?' to French"
+                  onClick={() =>
+                    handleSuggestionClick(
+                      "Translate 'How are you?' to French and explain when to use 'tu' vs 'vous'"
+                    )
+                  }
+                />
+                <SuggestionCard
+                  title="Write an email"
+                  description="e.g., Professional email in German"
+                  onClick={() =>
+                    handleSuggestionClick(
+                      'Write a professional email in German asking for a project status update.'
+                    )
+                  }
+                />
+                <SuggestionCard
+                  title="Ask about culture"
+                  description="e.g., Cultural norms in Japan"
+                  onClick={() =>
+                    handleSuggestionClick(
+                      'What are some important cultural norms to be aware of when visiting Japan for business?'
+                    )
+                  }
+                />
+              </div>
+            </div>
+          )}
           {isPending && (
             <div className="flex items-start justify-start gap-4">
               <Avatar className="h-9 w-9 border">
