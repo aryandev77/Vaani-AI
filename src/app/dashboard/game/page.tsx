@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -484,9 +485,11 @@ const ScoreScreen = ({
 };
 
 export default function GamePage() {
-  const [gameState, setGameState] = useState<'menu' | 'playing' | 'score'>(
-    'menu'
-  );
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  const [gameState, setGameState] = useState<'menu' | 'playing' | 'score'>('menu');
   const [gameType, setGameType] = useState<GameType | null>(null);
   const [level, setLevel] = useState(1);
   const [score, setScore] = useState(0);
@@ -521,15 +524,29 @@ export default function GamePage() {
   }, [sourceLang, targetLang]);
 
   useEffect(() => {
+    const typeFromUrl = searchParams.get('type') as GameType | null;
+    
     setGameData(getGameData(level, sourceLang, targetLang));
-  }, [sourceLang, targetLang, level]);
+
+    if (typeFromUrl) {
+      setGameType(typeFromUrl);
+      if (gameState === 'menu') {
+        setGameState('playing');
+      }
+    } else {
+      if (gameState !== 'score') {
+         setGameState('menu');
+         setGameType(null);
+         setLevel(1);
+         setScore(0);
+      }
+    }
+  }, [searchParams, sourceLang, targetLang, level, gameState]);
 
 
   const startGame = (type: GameType) => {
     playStart();
-    setGameType(type);
-    setGameState('playing');
-    setGameData(getGameData(level, sourceLang, targetLang));
+    router.push(`${pathname}?type=${type}`);
   };
 
   const handleGameEnd = (finalScore: number) => {
@@ -541,8 +558,7 @@ export default function GamePage() {
 
   const handleNextLevel = () => {
     playStart();
-    const nextLevel = level + 1;
-    setLevel(nextLevel);
+    setLevel(level + 1);
     setGameState('playing');
   };
 
@@ -554,10 +570,7 @@ export default function GamePage() {
 
   const handleMainMenu = () => {
     playClick();
-    setGameState('menu');
-    setGameType(null);
-    setLevel(1);
-    setScore(0);
+    router.push(pathname);
   };
   
   const isPremiumUser = isSubscribed || isFounder;
