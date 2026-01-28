@@ -56,6 +56,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 const phraseOfTheDay = {
   phrase: 'Bite the bullet',
@@ -424,7 +425,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               </div>
               <UserNav />
             </header>
-            <main className="flex-1 overflow-auto p-4 sm:p-6">
+            <main
+              className={cn(
+                'flex-1',
+                pathname === '/dashboard'
+                  ? 'overflow-hidden'
+                  : 'overflow-auto p-4 sm:p-6'
+              )}
+            >
               {children}
             </main>
           </div>
