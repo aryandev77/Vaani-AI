@@ -27,11 +27,18 @@ export const useSpeechRecognition = (onTranscriptChange: (transcript: string) =>
       recognition.lang = 'en-US';
 
       recognition.onresult = (event: any) => {
-        const transcript = Array.from(event.results)
-          .map((result: any) => result[0])
-          .map((result: any) => result.transcript)
-          .join('');
-        onTranscriptChange(transcript);
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = 0; i < event.results.length; i++) {
+          const transcriptPart = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcriptPart;
+          } else {
+            interimTranscript += transcriptPart;
+          }
+        }
+        onTranscriptChange(finalTranscript + interimTranscript);
       };
 
       recognition.onerror = (event: any) => {
