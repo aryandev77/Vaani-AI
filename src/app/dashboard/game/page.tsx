@@ -298,7 +298,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
               key={`${word}-${index}`}
               variant="outline"
               className={cn(
-                'w-full justify-start p-6 text-lg h-auto',
+                'w-full justify-start p-6 text-lg h-auto whitespace-normal',
                 selectedLeft === word && 'ring-2 ring-primary',
                 isComplete(word, 'left') &&
                   'bg-green-500/20 text-white hover:bg-green-500/30',
@@ -318,7 +318,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
               key={`${word}-${index}`}
               variant="outline"
               className={cn(
-                'w-full justify-start p-6 text-lg h-auto',
+                'w-full justify-start p-6 text-lg h-auto whitespace-normal',
                 selectedRight === word && 'ring-2 ring-primary',
                 isComplete(word, 'right') &&
                   'bg-green-500/20 text-white hover:bg-green-500/30',
@@ -393,7 +393,7 @@ const McqGame = ({ gameData, level, onGameEnd, title, questionTitle }: any) => {
               key={option}
               variant="outline"
               className={cn(
-                'p-8 text-lg h-auto',
+                'p-8 text-lg h-auto whitespace-normal',
                 selectedAnswer === option && isCorrect && 'bg-green-500/20 text-white animate-pulse',
                 selectedAnswer === option && !isCorrect && 'bg-red-500/20 text-white animate-shake',
                 selectedAnswer && option === question.answer && 'bg-green-500/20 text-white'
