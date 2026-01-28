@@ -293,9 +293,9 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          {gameData.left.map((word: string) => (
+          {gameData.left.map((word: string, index: number) => (
             <Button
-              key={word}
+              key={`${word}-${index}`}
               variant="outline"
               className={cn(
                 'w-full justify-start p-6 text-lg h-auto',
@@ -313,9 +313,9 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
           ))}
         </div>
         <div className="space-y-2">
-          {gameData.right.map((word: string) => (
+          {gameData.right.map((word: string, index: number) => (
             <Button
-              key={word}
+              key={`${word}-${index}`}
               variant="outline"
               className={cn(
                 'w-full justify-start p-6 text-lg h-auto',
