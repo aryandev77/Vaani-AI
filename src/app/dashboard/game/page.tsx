@@ -13,7 +13,7 @@ import {
   Heart,
   Lock,
   Sparkles,
-  BookQuestion,
+  BookOpenCheck,
   Milestone,
 } from 'lucide-react';
 import useSound from 'use-sound';
@@ -630,7 +630,7 @@ export default function GamePage() {
                 <GameCard
                 title="Cultural Context Quiz"
                 description="Test your knowledge of idioms and cultural sayings."
-                icon={<BookQuestion className="h-10 w-10 text-primary" />}
+                icon={<BookOpenCheck className="h-10 w-10 text-primary" />}
                 onStart={() => startGame('cultural-quiz')}
                 isLocked={!isPremiumUser}
                 />
