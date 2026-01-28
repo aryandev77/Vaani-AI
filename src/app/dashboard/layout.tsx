@@ -39,6 +39,8 @@ import { FullScreenLoader } from '@/components/full-screen-loader';
 import {
   Dialog,
   DialogContent,
+  DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -46,7 +48,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   Accordion,
@@ -363,11 +364,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     </DialogTrigger>
                     <DialogContent className="p-0">
                       <Card className="border-0 shadow-none">
-                        <CardHeader>
-                          <CardTitle className="flex items-center gap-2 font-headline">
+                        <DialogHeader className="p-6">
+                          <DialogTitle className="flex items-center gap-2 font-headline text-2xl">
                             <Quote /> Phrase of the Day
-                          </CardTitle>
-                        </CardHeader>
+                          </DialogTitle>
+                        </DialogHeader>
                         <CardContent>
                           <Accordion type="single" collapsible>
                             <AccordionItem value="item-1">
