@@ -248,6 +248,7 @@ const LiveCallInterface = () => {
 export default function LiveCallPage() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isFounder, setIsFounder] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -255,12 +256,27 @@ export default function LiveCallPage() {
       if (adminStatus === 'true') {
         setIsFounder(true);
       }
+      const subscriptionStatus = localStorage.getItem('isSubscribed');
+      if (subscriptionStatus === 'true') {
+        setIsSubscribed(true);
+      }
     }
   }, []);
+
+  const handleUpgradeSimulation = () => {
+    setIsSubscribed(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isSubscribed', 'true');
+    }
+    toast({
+      title: 'Subscription Simulated!',
+      description: 'You can now access the Live Call feature.',
+    });
+  };
   
   return (
     <div className="flex h-full items-center justify-center">
-      {isSubscribed || isFounder ? <LiveCallInterface /> : <UpgradeView onUpgrade={() => setIsSubscribed(true)} />}
+      {isSubscribed || isFounder ? <LiveCallInterface /> : <UpgradeView onUpgrade={handleUpgradeSimulation} />}
     </div>
   );
 }

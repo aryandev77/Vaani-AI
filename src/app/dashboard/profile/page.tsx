@@ -135,6 +135,10 @@ export default function ProfilePage() {
         if (adminStatus === 'true') {
           setIsFounder(true);
         }
+        const subscriptionStatus = localStorage.getItem('isSubscribed');
+        if (subscriptionStatus === 'true') {
+          setIsSubscribed(true);
+        }
       }
 
       return () => {
@@ -267,7 +271,7 @@ export default function ProfilePage() {
                       <AlertDialogTitle>Restore Your Streak?</AlertDialogTitle>
                       <AlertDialogDescription>
                         {isSubscribed || isFounder
-                          ? "As a founder, you have unlimited restores. Your streak will be saved!"
+                          ? "As a founder or subscriber, you have unlimited restores. Your streak will be saved!"
                           : `This will use one of your ${remainingRestores} free restores for this month.`
                         }
                       </AlertDialogDescription>

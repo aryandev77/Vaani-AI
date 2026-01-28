@@ -3,17 +3,32 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Check, Crown, Lock, ArrowRight, X, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { Button } from '@/components/ui/button';
 import { Logo } from '@/components/logo';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 type Plan = 'monthly' | 'yearly';
 
 export default function BillingPage() {
   const [selectedPlan, setSelectedPlan] = useState<Plan>('yearly');
   const bgImage = getPlaceholderImage('billing-dark-background');
+  const { toast } = useToast();
+  const router = useRouter();
 
   const plans = [
     {
@@ -33,6 +48,22 @@ export default function BillingPage() {
       popular: true,
     },
   ];
+
+  const handlePurchase = () => {
+    // In a real app, this would redirect to Stripe Checkout.
+    // For this demo, we simulate a successful purchase.
+    toast({
+      title: 'Purchase Successful!',
+      description: "You've unlocked all premium features.",
+    });
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isSubscribed', 'true');
+    }
+
+    // Redirect user to a premium feature page
+    router.push('/dashboard/live-call');
+  };
 
   return (
     <div className="mx-auto w-full max-w-md overflow-hidden rounded-2xl bg-black text-white shadow-2xl">
@@ -121,12 +152,36 @@ export default function BillingPage() {
           </div>
 
           <div className="mt-auto space-y-4 text-center">
-            <Button
-              size="lg"
-              className="w-full bg-red-600 text-white hover:bg-red-700"
-            >
-              Continue <ArrowRight className="ml-2" />
-            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="lg"
+                  className="w-full bg-red-600 text-white hover:bg-red-700"
+                >
+                  Continue <ArrowRight className="ml-2" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Ready to Upgrade?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    You are about to purchase the{' '}
+                    {selectedPlan === 'yearly' ? 'Yearly' : 'Monthly'} plan.
+                    <br />
+                    <br />
+                    In a real application, this would securely redirect you to a
+                    Stripe checkout page. For this demo, we'll simulate a
+                    successful purchase.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handlePurchase}>
+                    Confirm Purchase
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             <div className="flex items-center justify-center gap-2 text-xs text-zinc-400">
               <Lock className="h-3 w-3" />
               <span>Secured with Stripe. Cancel anytime.</span>
