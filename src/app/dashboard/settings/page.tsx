@@ -24,6 +24,8 @@ import {
   Trash2,
   User,
   Palette,
+  Shield,
+  Smartphone,
 } from 'lucide-react';
 import { useTheme } from 'next-themes';
 
@@ -257,7 +259,7 @@ export default function SettingsPage() {
 
   return (
     <Tabs defaultValue="account" className="mx-auto max-w-2xl">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="account">
           <User className="mr-2" />
           Account
@@ -269,6 +271,10 @@ export default function SettingsPage() {
         <TabsTrigger value="security">
           <KeyRound className="mr-2" />
           Security
+        </TabsTrigger>
+        <TabsTrigger value="privacy">
+          <Shield className="mr-2" />
+          Privacy
         </TabsTrigger>
         <TabsTrigger value="danger">
           <Trash2 className="mr-2 text-destructive/80" />
@@ -397,13 +403,16 @@ export default function SettingsPage() {
       <TabsContent value="security" className="mt-6 space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Password</CardTitle>
+            <CardTitle>Account Security</CardTitle>
             <CardDescription>
-              Manage your password settings. Requires your current password.
+              Manage your account security settings to keep your account safe.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-8">
             <form className="space-y-6" onSubmit={handlePasswordUpdate}>
+              <h3 className="text-lg font-medium border-b pb-2">
+                Change Password
+              </h3>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="grid gap-2">
                   <Label htmlFor="current-password">Current Password</Label>
@@ -428,6 +437,26 @@ export default function SettingsPage() {
                 <Button type="submit">Update Password</Button>
               </div>
             </form>
+            <Separator />
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium">
+                Two-Factor Authentication (2FA)
+              </h3>
+              <div className="flex items-start gap-4 rounded-lg border bg-muted/50 p-4">
+                <Smartphone className="mt-1 h-6 w-6 shrink-0 text-muted-foreground" />
+                <div>
+                  <h4 className="font-semibold">Status: Not Configured</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Add an extra layer of security to your account. When
+                    enabled, you'll be asked for a security code from your
+                    authenticator app.
+                  </p>
+                  <Button variant="outline" className="mt-3" disabled>
+                    Configure 2FA (Coming Soon)
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -485,6 +514,42 @@ export default function SettingsPage() {
                 </DialogContent>
               </Dialog>
             )}
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="privacy" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Privacy Settings</CardTitle>
+            <CardDescription>
+              Manage how your data is used and see our policies.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <h3 className="font-medium">Data Usage</h3>
+              <p className="text-sm text-muted-foreground">
+                We use your data to improve the AI models and provide a
+                personalized experience. This includes saved translations,
+                feedback, and profile information. We are committed to
+                protecting your privacy.
+              </p>
+            </div>
+            <Separator />
+            <div className="space-y-4">
+              <h3 className="font-medium">Privacy Policy</h3>
+              <p className="text-sm text-muted-foreground">
+                For a detailed explanation of what data we collect and how we
+                use it, please read our full privacy policy.
+              </p>
+              <Button asChild variant="outline">
+                <Link href="/dashboard/privacy">
+                  <BookUser className="mr-2 h-4 w-4" />
+                  View Privacy Policy
+                </Link>
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>

@@ -19,6 +19,7 @@ import {
   Quote,
   Voicemail,
   HelpCircle,
+  Shield,
 } from 'lucide-react';
 
 import {
@@ -44,11 +45,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import {
   Accordion,
   AccordionContent,
@@ -110,6 +107,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       '/dashboard/spiritual-texts': 'Spiritual Texts',
       '/dashboard/billing': 'Billing & Subscriptions',
       '/dashboard/tutorial': 'App Tutorial',
+      '/dashboard/privacy': 'Privacy Policy',
     };
     return pageTitles[pathname] || 'Dashboard';
   }, [pathname]);
@@ -313,6 +311,22 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <SidebarMenuButton
                   asChild
                   tooltip={{
+                    children: 'Privacy',
+                    className: 'bg-primary text-primary-foreground',
+                  }}
+                  size="lg"
+                  isActive={pathname === '/dashboard/privacy'}
+                >
+                  <Link href="/dashboard/privacy">
+                    <Shield />
+                    <span>Privacy</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip={{
                     children: 'Settings',
                     className: 'bg-primary text-primary-foreground',
                   }}
@@ -363,62 +377,60 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         <Quote className="h-5 w-5" />
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="p-0">
-                      <Card className="border-0 shadow-none">
-                        <DialogHeader className="p-6">
-                          <DialogTitle className="flex items-center gap-2 font-headline text-2xl">
-                            <Quote /> Phrase of the Day
-                          </DialogTitle>
-                        </DialogHeader>
-                        <CardContent>
-                          <Accordion type="single" collapsible>
-                            <AccordionItem value="item-1">
-                              <AccordionTrigger>
-                                <div className="text-left">
-                                  <p className="text-xl font-semibold">
-                                    {phraseOfTheDay.phrase}
-                                  </p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {phraseOfTheDay.meaning}
-                                  </p>
-                                </div>
-                              </AccordionTrigger>
-                              <AccordionContent className="space-y-4 pt-2">
-                                <div>
-                                  <h4 className="font-semibold">
-                                    Origin Story
-                                  </h4>
-                                  <p className="text-muted-foreground">
-                                    {phraseOfTheDay.story}
-                                  </p>
-                                </div>
-                                <div>
-                                  <h4 className="font-semibold">
-                                    Emotional Translations
-                                  </h4>
-                                  <div className="mt-2 space-y-2">
-                                    {phraseOfTheDay.translations.map(t => (
-                                      <div
-                                        key={t.lang}
-                                        className="flex items-center justify-between rounded-md bg-secondary p-2"
-                                      >
-                                        <div>
-                                          <p className="font-medium">
-                                            {t.lang}: "{t.text}"
-                                          </p>
-                                        </div>
-                                        <Badge variant="outline">
-                                          {t.emotion}
-                                        </Badge>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 font-headline text-2xl">
+                          <Quote /> Phrase of the Day
+                        </DialogTitle>
+                      </DialogHeader>
+                      <CardContent>
+                        <Accordion type="single" collapsible>
+                          <AccordionItem value="item-1">
+                            <AccordionTrigger>
+                              <div className="text-left">
+                                <p className="text-xl font-semibold">
+                                  {phraseOfTheDay.phrase}
+                                </p>
+                                <p className="text-sm text-muted-foreground">
+                                  {phraseOfTheDay.meaning}
+                                </p>
+                              </div>
+                            </AccordionTrigger>
+                            <AccordionContent className="space-y-4 pt-2">
+                              <div>
+                                <h4 className="font-semibold">
+                                  Origin Story
+                                </h4>
+                                <p className="text-muted-foreground">
+                                  {phraseOfTheDay.story}
+                                </p>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold">
+                                  Emotional Translations
+                                </h4>
+                                <div className="mt-2 space-y-2">
+                                  {phraseOfTheDay.translations.map(t => (
+                                    <div
+                                      key={t.lang}
+                                      className="flex items-center justify-between rounded-md bg-secondary p-2"
+                                    >
+                                      <div>
+                                        <p className="font-medium">
+                                          {t.lang}: "{t.text}"
+                                        </p>
                                       </div>
-                                    ))}
-                                  </div>
+                                      <Badge variant="outline">
+                                        {t.emotion}
+                                      </Badge>
+                                    </div>
+                                  ))}
                                 </div>
-                              </AccordionContent>
-                            </AccordionItem>
-                          </Accordion>
-                        </CardContent>
-                      </Card>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        </Accordion>
+                      </CardContent>
                     </DialogContent>
                   </Dialog>
                 )}
