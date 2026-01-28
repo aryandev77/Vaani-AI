@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useEffect, useRef, useActionState } from 'react';
+import Link from 'next/link';
 import {
   Mic,
-  Voicemail,
   Play,
   LoaderCircle,
   Save,
   Trash2,
   ListMusic,
+  Voicemail,
+  Sparkles,
 } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import {
@@ -61,7 +63,52 @@ const languages = [
   { value: 'hindi', label: 'Hindi' },
 ];
 
-export default function VoiceMemoPage() {
+const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
+  return (
+    <div className="flex h-full w-full items-center justify-center">
+      <Card className="w-full max-w-lg text-center">
+        <CardHeader>
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <Voicemail className="h-8 w-8 text-primary" />
+          </div>
+          <CardTitle className="mt-4 text-2xl font-headline">
+            Unlock Voice Memo & Phrasebook
+          </CardTitle>
+          <CardDescription>
+            This is a premium feature. Record, translate, and save your voice
+            memos to a personal phrasebook.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <ul className="list-disc space-y-2 pl-5 text-left text-sm text-muted-foreground">
+            <li>Record voice notes and get instant transcriptions.</li>
+            <li>Translate your memos into any language.</li>
+            <li>Save unlimited phrases to your personal audio phrasebook.</li>
+            <li>Practice pronunciation by listening to your saved memos.</li>
+          </ul>
+          <div className="flex flex-col gap-2">
+            <Button size="lg" asChild className="mt-4 w-full">
+              <Link href="/dashboard/billing">
+                <Sparkles className="mr-2 h-5 w-5" />
+                Upgrade to Pro
+              </Link>
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={onUpgrade}
+              className="w-full"
+            >
+              Simulate Subscription
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+const VoiceMemoInterface = () => {
   const user = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
@@ -95,23 +142,26 @@ export default function VoiceMemoPage() {
       collection(firestore, 'users', user.uid, 'voice-memos'),
       orderBy('createdAt', 'desc')
     );
-    const unsubscribe = onSnapshot(memosQuery, snapshot => {
-      setMemos(
-        snapshot.docs.map(
-          doc => ({ id: doc.id, ...doc.data() } as VoiceMemo)
-        )
-      );
-      setIsLoadingMemos(false);
-    },
-    (error) => {
-        console.error("Error fetching voice memos: ", error);
-        toast({
-            variant: "destructive",
-            title: "Error loading memos",
-            description: "Could not fetch your saved voice memos."
-        })
+    const unsubscribe = onSnapshot(
+      memosQuery,
+      snapshot => {
+        setMemos(
+          snapshot.docs.map(
+            doc => ({ id: doc.id, ...doc.data() } as VoiceMemo)
+          )
+        );
         setIsLoadingMemos(false);
-    });
+      },
+      error => {
+        console.error('Error fetching voice memos: ', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error loading memos',
+          description: 'Could not fetch your saved voice memos.',
+        });
+        setIsLoadingMemos(false);
+      }
+    );
     return () => unsubscribe();
   }, [user, firestore, toast]);
 
@@ -225,7 +275,9 @@ export default function VoiceMemoPage() {
               <Label htmlFor="transcript">Live Transcript</Label>
               <Textarea
                 id="transcript"
-                placeholder={isListening ? '...' : 'Transcript will appear here...'}
+                placeholder={
+                  isListening ? '...' : 'Transcript will appear here...'
+                }
                 value={transcript}
                 onChange={e => setTranscript(e.target.value)}
                 readOnly={isListening}
@@ -303,9 +355,13 @@ export default function VoiceMemoPage() {
           <CardContent>
             <div className="space-y-4">
               {isLoadingMemos ? (
-                 Array.from({ length: 3 }).map((_, i) => (
-                    <Card key={i}><CardHeader><Skeleton className="h-20 w-full" /></CardHeader></Card>
-                 ))
+                Array.from({ length: 3 }).map((_, i) => (
+                  <Card key={i}>
+                    <CardHeader>
+                      <Skeleton className="h-20 w-full" />
+                    </CardHeader>
+                  </Card>
+                ))
               ) : memos.length === 0 ? (
                 <Alert>
                   <ListMusic className="h-4 w-4" />
@@ -316,26 +372,54 @@ export default function VoiceMemoPage() {
                 </Alert>
               ) : (
                 memos.map(memo => (
-                  <Card key={memo.id} className="flex items-center justify-between p-4">
+                  <Card
+                    key={memo.id}
+                    className="flex items-center justify-between p-4"
+                  >
                     <div className="flex-1 space-y-1 pr-4">
                       {memo.title && <p className="font-bold">{memo.title}</p>}
-                       <p className="text-sm text-muted-foreground italic">"{memo.originalText}"</p>
-                      <p className="text-sm font-medium">"{memo.translatedText}"</p>
-                      <div className='flex items-center gap-2 text-xs text-muted-foreground'>
-                        <span>{memo.sourceLang.slice(0,2).toUpperCase()} → {memo.targetLang.slice(0,2).toUpperCase()}</span>
+                      <p className="text-sm text-muted-foreground italic">
+                        "{memo.originalText}"
+                      </p>
+                      <p className="text-sm font-medium">
+                        "{memo.translatedText}"
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>
+                          {memo.sourceLang.slice(0, 2).toUpperCase()} →{' '}
+                          {memo.targetLang.slice(0, 2).toUpperCase()}
+                        </span>
                         <span>•</span>
-                        <span>{formatDistanceToNow(memo.createdAt.toDate(), {addSuffix: true})}</span>
+                        <span>
+                          {formatDistanceToNow(memo.createdAt.toDate(), {
+                            addSuffix: true,
+                          })}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
                       <form action={playAction}>
-                         <input type="hidden" name="memoId" value={memo.id} />
-                        <input type="hidden" name="textToPlay" value={memo.translatedText} />
-                        <SubmitButton variant="outline" size="icon" pendingContent={<LoaderCircle className="animate-spin" />}>
+                        <input type="hidden" name="memoId" value={memo.id} />
+                        <input
+                          type="hidden"
+                          name="textToPlay"
+                          value={memo.translatedText}
+                        />
+                        <SubmitButton
+                          variant="outline"
+                          size="icon"
+                          pendingContent={
+                            <LoaderCircle className="animate-spin" />
+                          }
+                        >
                           <Play />
                         </SubmitButton>
                       </form>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(memo.id)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(memo.id)}
+                      >
                         <Trash2 className="text-destructive" />
                       </Button>
                     </div>
@@ -348,5 +432,41 @@ export default function VoiceMemoPage() {
       </div>
       <audio ref={audioRef} className="hidden" />
     </div>
+  );
+};
+
+export default function VoiceMemoPage() {
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isFounder, setIsFounder] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const adminStatus = localStorage.getItem('isAdmin');
+      if (adminStatus === 'true') {
+        setIsFounder(true);
+      }
+      const subscriptionStatus = localStorage.getItem('isSubscribed');
+      if (subscriptionStatus === 'true') {
+        setIsSubscribed(true);
+      }
+    }
+  }, []);
+
+  const handleUpgradeSimulation = () => {
+    setIsSubscribed(true);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('isSubscribed', 'true');
+    }
+    toast({
+      title: 'Subscription Simulated!',
+      description: 'You can now access the Voice Memo & Phrasebook feature.',
+    });
+  };
+
+  return isSubscribed || isFounder ? (
+    <VoiceMemoInterface />
+  ) : (
+    <UpgradeView onUpgrade={handleUpgradeSimulation} />
   );
 }

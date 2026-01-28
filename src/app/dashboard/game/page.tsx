@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Award, Repeat, Zap, Columns, Heart } from 'lucide-react';
+import {
+  Check,
+  X,
+  Award,
+  Repeat,
+  Zap,
+  Columns,
+  Heart,
+  Lock,
+  Sparkles,
+} from 'lucide-react';
 import useSound from 'use-sound';
 import { Button } from '@/components/ui/button';
 import {
@@ -104,24 +115,43 @@ const GameCard = ({
   description,
   icon,
   onStart,
+  isLocked,
 }: {
   title: string;
   description: string;
   icon: React.ReactNode;
   onStart: () => void;
+  isLocked: boolean;
 }) => (
-  <Card className="transform transition-transform duration-300 hover:scale-105 hover:shadow-lg">
+  <Card
+    className={cn(
+      'transform transition-transform duration-300',
+      !isLocked && 'hover:scale-105 hover:shadow-lg',
+      isLocked && 'bg-muted/50'
+    )}
+  >
     <CardHeader className="flex flex-row items-center gap-4">
       {icon}
       <div>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="flex items-center gap-2">
+          {title}
+          {isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
+        </CardTitle>
         <CardDescription>{description}</CardDescription>
       </div>
     </CardHeader>
     <CardContent>
-      <Button onClick={onStart} className="w-full">
-        Play Now
-      </Button>
+      {isLocked ? (
+        <Button asChild className="w-full">
+          <Link href="/dashboard/billing">
+            <Sparkles className="mr-2" /> Upgrade to Play
+          </Link>
+        </Button>
+      ) : (
+        <Button onClick={onStart} className="w-full">
+          Play Now
+        </Button>
+      )}
     </CardContent>
   </Card>
 );
@@ -426,6 +456,21 @@ export default function GamePage() {
   const [gameData, setGameData] = useState(getGameData(level, sourceLang, targetLang));
   const [playStart] = useSound(SOUNDS.start);
   const [playClick] = useSound(SOUNDS.click, { volume: 0.5 });
+  const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isFounder, setIsFounder] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const adminStatus = localStorage.getItem('isAdmin');
+      if (adminStatus === 'true') {
+        setIsFounder(true);
+      }
+      const subscriptionStatus = localStorage.getItem('isSubscribed');
+      if (subscriptionStatus === 'true') {
+        setIsSubscribed(true);
+      }
+    }
+  }, []);
   
   useEffect(() => {
     if (sourceLang === targetLang) {
@@ -475,6 +520,8 @@ export default function GamePage() {
     setLevel(1);
     setScore(0);
   };
+  
+  const isLocked = !(isSubscribed || isFounder);
 
   return (
     <div className="flex h-full items-center justify-center">
@@ -532,12 +579,14 @@ export default function GamePage() {
               description="Match words to their translations."
               icon={<Columns className="h-10 w-10 text-primary" />}
               onStart={() => startGame('match-columns')}
+              isLocked={isLocked}
             />
             <GameCard
               title="Translate the Word"
               description="Choose the correct translation from multiple choices."
               icon={<Zap className="h-10 w-10 text-accent" />}
               onStart={() => startGame('translate-word')}
+              isLocked={isLocked}
             />
           </motion.div>
         )}
