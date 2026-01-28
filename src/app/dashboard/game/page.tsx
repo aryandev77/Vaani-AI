@@ -13,6 +13,8 @@ import {
   Heart,
   Lock,
   Sparkles,
+  BookQuestion,
+  Milestone,
 } from 'lucide-react';
 import useSound from 'use-sound';
 import { Button } from '@/components/ui/button';
@@ -35,7 +37,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-type GameType = 'match-columns' | 'translate-word';
+type GameType =
+  | 'match-columns'
+  | 'translate-word'
+  | 'cultural-quiz'
+  | 'proverb-matching';
 
 const words: { [key: string]: string }[] = [
   { en: 'Hello', es: 'Hola', fr: 'Bonjour', de: 'Hallo', ja: 'こんにちは', zh: '你好', hi: 'नमस्ते', bn: 'হ্যালো', mr: 'नमस्कार', ta: 'வணக்கம்', te: 'నమస్కారం', bho: 'प्रणाम', ml: 'നമസ്കാരം', ur: 'ہیلو', pa: 'ਸਤ ਸ੍ਰੀ ਅਕਾਲ' },
@@ -49,6 +55,23 @@ const words: { [key: string]: string }[] = [
   { en: 'Water', es: 'Agua', fr: 'Eau', de: 'Wasser', ja: '水', zh: '水', hi: 'पानी', bn: 'জল', mr: 'पाणी', ta: 'தண்ணீர்', te: 'నీరు', bho: 'पानी', ml: 'വെള്ളം', ur: 'پانی', pa: 'ਪਾਣੀ' },
   { en: 'Sun', es: 'Sol', fr: 'Soleil', de: 'Sonne', ja: '太陽', zh: '太阳', hi: 'सूरज', bn: 'সূর্য', mr: 'सूर्य', ta: 'சூரியன்', te: 'సూర్యుడు', bho: 'सुरुज', ml: 'സൂര്യൻ', ur: 'سورج', pa: 'ਸੂਰਜ' },
 ];
+
+const culturalQuizQuestions = [
+  { question: "What does 'Break a leg' mean in Theatre culture?", answer: "Good luck!", options: ["Be careful", "You will fail", "Work harder"] },
+  { question: "If someone in Japan says 'It can't be helped' (Shikata ga nai), what emotion are they expressing?", answer: "Resigned acceptance", options: ["Extreme anger", "Joyful excitement", "Deep confusion"] },
+  { question: "In India, what is a common gesture for showing respect to elders?", answer: "Touching their feet", options: ["A firm handshake", "Waving goodbye", "Giving a high-five"] },
+  { question: "What does the idiom 'Bite the bullet' mean?", answer: "Face a difficult situation with courage", options: ["Go to the dentist", "Eat something quickly", "Be quiet"] },
+  { question: "In Italy, what might happen if you order a cappuccino after 11 AM?", answer: "You might get a strange look", options: ["You receive a discount", "You get a free pastry", "It's illegal"] },
+];
+
+const proverbs = [
+  { hi: "अंधों में काना राजा", en: "In the land of the blind, the one-eyed man is king" },
+  { es: "Camarón que se duerme, se lo lleva la corriente", en: "The shrimp that sleeps is carried away by the current" },
+  { de: "Morgenstund hat Gold im Mund", en: "The morning hour has gold in its mouth" },
+  { fr: "Il ne faut pas vendre la peau de l'ours avant de l'avoir tué", en: "Don't sell the bear's skin before you've killed it" },
+  { ja: "猿も木から落ちる (Saru mo ki kara ochiru)", en: "Even monkeys fall from trees" },
+];
+
 
 const gameLanguages = [
     { value: 'en', label: 'English' },
@@ -97,6 +120,13 @@ const getGameData = (
     return { question: word[sourceLang], options, answer: word[targetLang] };
   });
 
+  const quizMcqOptions = shuffleArray(culturalQuizQuestions).slice(0, 5).map(q => {
+      const options = shuffleArray([q.answer, ...q.options]);
+      return { ...q, options };
+  });
+  
+  const shuffledProverbs = shuffleArray(proverbs);
+
   return {
     matchColumns: {
       left: shuffleArray(gameWords.map(w => w[sourceLang])),
@@ -107,6 +137,15 @@ const getGameData = (
       ),
     },
     translateWord: mcqOptions,
+    culturalQuiz: quizMcqOptions,
+    proverbMatching: {
+        left: shuffleArray(shuffledProverbs.map(p => p.hi)),
+        right: shuffleArray(shuffledProverbs.map(p => p.en)),
+        mapping: shuffledProverbs.reduce(
+            (acc, w) => ({...acc, [w.hi]: w.en}),
+            {} as Record<string, string>
+        )
+    }
   };
 };
 
@@ -156,7 +195,7 @@ const GameCard = ({
   </Card>
 );
 
-const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
+const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
   const [selectedLeft, setSelectedLeft] = useState<string | null>(null);
   const [selectedRight, setSelectedRight] = useState<string | null>(null);
   const [correctPairs, setCorrectPairs] = useState<Record<string, string>>({});
@@ -199,7 +238,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
 
     if (currentLeft && currentRight) {
       if (gameData.mapping[currentLeft] === currentRight) {
-        setCorrectPairs(prev => ({ ...prev, [currentLeft]: currentRight }));
+        setCorrectPairs(prev => ({ ...prev, [currentLeft as string]: currentRight as string }));
         playCorrect();
       } else {
         setLives(prev => prev - 1);
@@ -235,7 +274,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-2xl font-bold">
-          Match the Words (Level {level})
+          {title} (Level {level})
         </h2>
         <div className="flex items-center gap-2">
           {[...Array(3)].map((_, i) => (
@@ -259,7 +298,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
               key={word}
               variant="outline"
               className={cn(
-                'w-full justify-start p-6 text-lg',
+                'w-full justify-start p-6 text-lg h-auto',
                 selectedLeft === word && 'ring-2 ring-primary',
                 isComplete(word, 'left') &&
                   'bg-green-500/20 text-white hover:bg-green-500/30',
@@ -269,7 +308,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
               onClick={() => handleSelect('left', word)}
               disabled={isComplete(word, 'left') || isGameOver}
             >
-              {word}
+              <span className="text-left">{word}</span>
             </Button>
           ))}
         </div>
@@ -279,7 +318,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
               key={word}
               variant="outline"
               className={cn(
-                'w-full justify-start p-6 text-lg',
+                'w-full justify-start p-6 text-lg h-auto',
                 selectedRight === word && 'ring-2 ring-primary',
                 isComplete(word, 'right') &&
                   'bg-green-500/20 text-white hover:bg-green-500/30',
@@ -289,7 +328,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
               onClick={() => handleSelect('right', word)}
               disabled={isComplete(word, 'right') || isGameOver}
             >
-              {word}
+             <span className="text-left">{word}</span>
             </Button>
           ))}
         </div>
@@ -299,7 +338,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd }: any) => {
 };
 
 
-const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
+const McqGame = ({ gameData, level, onGameEnd, title, questionTitle }: any) => {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
@@ -323,7 +362,7 @@ const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
     }
 
     setTimeout(() => {
-      if (currentQuestion < 4) {
+      if (currentQuestion < gameData.length - 1) {
         setCurrentQuestion(q => q + 1);
         setSelectedAnswer(null);
         setIsCorrect(null);
@@ -339,13 +378,13 @@ const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
       animate={{ opacity: 1, y: 0 }}
     >
       <Progress
-        value={((currentQuestion + 1) / 5) * 100}
+        value={((currentQuestion + 1) / gameData.length) * 100}
         className="mb-4"
       />
-      <h2 className="mb-2 text-center text-xl font-bold">Level {level}</h2>
+      <h2 className="mb-2 text-center text-xl font-bold">{title} (Level {level})</h2>
       <Card className="text-center">
         <CardHeader>
-          <CardDescription>Translate the word:</CardDescription>
+          <CardDescription>{questionTitle}</CardDescription>
           <CardTitle className="text-4xl font-bold">{question.question}</CardTitle>
         </CardHeader>
         <CardContent className="grid grid-cols-2 gap-4">
@@ -354,7 +393,7 @@ const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
               key={option}
               variant="outline"
               className={cn(
-                'p-8 text-lg',
+                'p-8 text-lg h-auto',
                 selectedAnswer === option && isCorrect && 'bg-green-500/20 text-white animate-pulse',
                 selectedAnswer === option && !isCorrect && 'bg-red-500/20 text-white animate-shake',
                 selectedAnswer && option === question.answer && 'bg-green-500/20 text-white'
@@ -362,7 +401,7 @@ const TranslateWordGame = ({ gameData, level, onGameEnd }: any) => {
               onClick={() => handleAnswer(option)}
               disabled={!!selectedAnswer}
             >
-              {option}
+              <span className="text-center">{option}</span>
             </Button>
           ))}
         </CardContent>
@@ -521,7 +560,7 @@ export default function GamePage() {
     setScore(0);
   };
   
-  const isLocked = !(isSubscribed || isFounder);
+  const isPremiumUser = isSubscribed || isFounder;
 
   return (
     <div className="flex h-full items-center justify-center">
@@ -532,62 +571,77 @@ export default function GamePage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="grid w-full max-w-2xl grid-cols-1 gap-8 md:grid-cols-2"
+            className="w-full max-w-4xl space-y-8"
           >
-            <div className="col-span-1 md:col-span-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Language Settings</CardTitle>
-                        <CardDescription>Choose your languages for the games.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-4">
-                        <div>
-                            <Label htmlFor="source-language">From</Label>
-                            <Select value={sourceLang} onValueChange={setSourceLang}>
-                                <SelectTrigger id="source-language">
-                                    <SelectValue placeholder="Select language" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {gameLanguages.map(lang => (
-                                        <SelectItem key={lang.value} value={lang.value} disabled={lang.value === targetLang}>
-                                            {lang.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label htmlFor="target-language">To</Label>
-                            <Select value={targetLang} onValueChange={setTargetLang}>
-                                <SelectTrigger id="target-language">
-                                    <SelectValue placeholder="Select language" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {gameLanguages.map(lang => (
-                                        <SelectItem key={lang.value} value={lang.value} disabled={lang.value === sourceLang}>
-                                            {lang.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </CardContent>
-                </Card>
+             <Card>
+                <CardHeader>
+                    <CardTitle>Language Settings</CardTitle>
+                    <CardDescription>Choose your languages for the vocabulary games.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 gap-4">
+                    <div>
+                        <Label htmlFor="source-language">From</Label>
+                        <Select value={sourceLang} onValueChange={setSourceLang}>
+                            <SelectTrigger id="source-language">
+                                <SelectValue placeholder="Select language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {gameLanguages.map(lang => (
+                                    <SelectItem key={lang.value} value={lang.value} disabled={lang.value === targetLang}>
+                                        {lang.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div>
+                        <Label htmlFor="target-language">To</Label>
+                        <Select value={targetLang} onValueChange={setTargetLang}>
+                            <SelectTrigger id="target-language">
+                                <SelectValue placeholder="Select language" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {gameLanguages.map(lang => (
+                                    <SelectItem key={lang.value} value={lang.value} disabled={lang.value === sourceLang}>
+                                        {lang.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </CardContent>
+            </Card>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <GameCard
+                title="Match the Columns"
+                description="Match words to their translations."
+                icon={<Columns className="h-10 w-10 text-primary" />}
+                onStart={() => startGame('match-columns')}
+                isLocked={false}
+                />
+                <GameCard
+                title="Translate the Word"
+                description="Choose the correct translation from multiple choices."
+                icon={<Zap className="h-10 w-10 text-accent" />}
+                onStart={() => startGame('translate-word')}
+                isLocked={false}
+                />
+                <GameCard
+                title="Cultural Context Quiz"
+                description="Test your knowledge of idioms and cultural sayings."
+                icon={<BookQuestion className="h-10 w-10 text-primary" />}
+                onStart={() => startGame('cultural-quiz')}
+                isLocked={!isPremiumUser}
+                />
+                <GameCard
+                title="Proverb Matching"
+                description="Match proverbs with similar meanings across cultures."
+                icon={<Milestone className="h-10 w-10 text-accent" />}
+                onStart={() => startGame('proverb-matching')}
+                isLocked={!isPremiumUser}
+                />
             </div>
-            <GameCard
-              title="Match the Columns"
-              description="Match words to their translations."
-              icon={<Columns className="h-10 w-10 text-primary" />}
-              onStart={() => startGame('match-columns')}
-              isLocked={isLocked}
-            />
-            <GameCard
-              title="Translate the Word"
-              description="Choose the correct translation from multiple choices."
-              icon={<Zap className="h-10 w-10 text-accent" />}
-              onStart={() => startGame('translate-word')}
-              isLocked={isLocked}
-            />
           </motion.div>
         )}
 
@@ -599,18 +653,39 @@ export default function GamePage() {
             exit={{ opacity: 0, scale: 0.9 }}
             className="w-full max-w-xl"
           >
-            {gameType === 'match-columns' ? (
+            {gameType === 'match-columns' && (
               <MatchColumnsGame
                 gameData={gameData.matchColumns}
                 level={level}
                 onGameEnd={handleGameEnd}
+                title="Match the Words"
               />
-            ) : (
-              <TranslateWordGame
+            )}
+            {gameType === 'translate-word' && (
+              <McqGame
                 gameData={gameData.translateWord}
                 level={level}
                 onGameEnd={handleGameEnd}
+                title="Translate the Word"
+                questionTitle="Translate the word:"
               />
+            )}
+            {gameType === 'cultural-quiz' && (
+              <McqGame
+                gameData={gameData.culturalQuiz}
+                level={level}
+                onGameEnd={handleGameEnd}
+                title="Cultural Quiz"
+                questionTitle="What does this mean?"
+              />
+            )}
+            {gameType === 'proverb-matching' && (
+                <MatchColumnsGame
+                    gameData={gameData.proverbMatching}
+                    level={level}
+                    onGameEnd={handleGameEnd}
+                    title="Match the Proverbs"
+                />
             )}
           </motion.div>
         )}
