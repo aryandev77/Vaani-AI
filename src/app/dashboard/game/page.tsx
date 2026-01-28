@@ -211,7 +211,7 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
 
   useEffect(() => {
     if (Object.keys(correctPairs).length === gameData.left.length) {
-      onGameEnd(Object.keys(correctPairs).length);
+      setTimeout(() => onGameEnd(Object.keys(correctPairs).length), 500);
     }
   }, [correctPairs, onGameEnd, gameData.left.length]);
 
@@ -299,17 +299,18 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
               key={`${word}-${index}`}
               variant="outline"
               className={cn(
-                'w-full justify-start p-6 text-lg h-auto whitespace-normal',
+                'w-full justify-between p-6 text-lg h-auto whitespace-normal',
                 selectedLeft === word && 'ring-2 ring-primary',
                 isComplete(word, 'left') &&
-                  'bg-green-500/20 text-white hover:bg-green-500/30',
+                  'bg-green-500/20 text-white hover:bg-green-500/30 disabled:opacity-80',
                 isIncorrect(word, 'left') &&
-                  'bg-red-500/20 text-white hover:bg-red-500/30 animate-shake'
+                  'bg-red-500/20 text-white animate-shake'
               )}
               onClick={() => handleSelect('left', word)}
               disabled={isComplete(word, 'left') || isGameOver}
             >
-              <span className="text-left">{word}</span>
+              <span className="text-left break-words">{word}</span>
+              {isComplete(word, 'left') && <Check className="h-6 w-6 shrink-0" />}
             </Button>
           ))}
         </div>
@@ -319,17 +320,18 @@ const MatchColumnsGame = ({ gameData, level, onGameEnd, title }: any) => {
               key={`${word}-${index}`}
               variant="outline"
               className={cn(
-                'w-full justify-start p-6 text-lg h-auto whitespace-normal',
+                'w-full justify-between p-6 text-lg h-auto whitespace-normal',
                 selectedRight === word && 'ring-2 ring-primary',
                 isComplete(word, 'right') &&
-                  'bg-green-500/20 text-white hover:bg-green-500/30',
+                  'bg-green-500/20 text-white hover:bg-green-500/30 disabled:opacity-80',
                 isIncorrect(word, 'right') &&
-                  'bg-red-500/20 text-white hover:bg-red-500/30 animate-shake'
+                  'bg-red-500/20 text-white animate-shake'
               )}
               onClick={() => handleSelect('right', word)}
               disabled={isComplete(word, 'right') || isGameOver}
             >
-             <span className="text-left">{word}</span>
+             <span className="text-left break-words">{word}</span>
+             {isComplete(word, 'right') && <Check className="h-6 w-6 shrink-0" />}
             </Button>
           ))}
         </div>
@@ -394,7 +396,7 @@ const McqGame = ({ gameData, level, onGameEnd, title, questionTitle }: any) => {
               key={option}
               variant="outline"
               className={cn(
-                'p-8 text-lg h-auto whitespace-normal',
+                'p-8 text-lg h-auto whitespace-normal break-words',
                 selectedAnswer === option && isCorrect && 'bg-green-500/20 text-white animate-pulse',
                 selectedAnswer === option && !isCorrect && 'bg-red-500/20 text-white animate-shake',
                 selectedAnswer && option === question.answer && 'bg-green-500/20 text-white'
