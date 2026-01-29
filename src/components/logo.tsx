@@ -31,7 +31,7 @@ export function Logo({ className }: { className?: string }) {
           fill="none"
         />
       </svg>
-      <span className="font-headline text-primary-foreground">Vaani AI</span>
+      <span className="font-headline text-foreground">Vaani AI</span>
     </div>
   );
 }
