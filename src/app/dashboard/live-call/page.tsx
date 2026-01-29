@@ -11,13 +11,11 @@ import {
   Mic,
   MicOff,
   PhoneOff,
-  User,
-  Settings2,
   LoaderCircle,
   MessageCircle,
   Lightbulb,
-  Heart,
   Expand,
+  MoreVertical,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -33,7 +31,6 @@ import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
 import { chatWithBot } from '@/ai/flows/chatbot';
 import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
@@ -107,7 +104,11 @@ const langCodeMapping: { [key: string]: string } = {
   french: 'fr-FR',
   german: 'de-DE',
   english: 'en-US',
-  // Add more mappings as needed
+  marathi: 'mr-IN',
+  tamil: 'ta-IN',
+  telugu: 'te-IN',
+  urdu: 'ur-IN',
+  punjabi: 'pa-IN',
 };
 
 const participants = [
@@ -132,6 +133,7 @@ const LiveCallInterface = () => {
   const [userTranscript, setUserTranscript] = useState('');
   const [conversation, setConversation] = useState<TranscriptItem[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const { isListening, isAvailable, toggleListening } = useSpeechRecognition({
     onTranscriptChange: setUserTranscript,
@@ -142,15 +144,16 @@ const LiveCallInterface = () => {
   useEffect(() => {
     const processUserTurn = async () => {
       if (userTranscript) {
+        setIsProcessing(true);
+        const currentTranscript = userTranscript;
+
         const userTurn: TranscriptItem = {
           id: Date.now(),
           speaker: 'me',
-          text: userTranscript,
+          text: currentTranscript,
           translation: 'Translating...',
         };
         setConversation(prev => [...prev, userTurn]);
-        const currentTranscript = userTranscript;
-        setUserTranscript('');
 
         const { translatedText: englishTranslation } =
           await realTimeTranslationWithContext({
@@ -169,18 +172,18 @@ const LiveCallInterface = () => {
           role: 'user',
           content: [{ text: englishTranslation }],
         };
-        const historyForThisTurn = [...chatHistory, userHistoryItem];
+        const updatedChatHistory = [...chatHistory, userHistoryItem];
 
         const { response: botEnglishResponse } = await chatWithBot({
           query: englishTranslation,
-          history: historyForThisTurn,
+          history: updatedChatHistory,
         });
 
         const botHistoryItem: ChatHistoryItem = {
           role: 'model',
           content: [{ text: botEnglishResponse }],
         };
-        setChatHistory([...historyForThisTurn, botHistoryItem]);
+        setChatHistory(prev => [...prev, botHistoryItem]);
 
         const {
           translatedText: botForeignResponse,
@@ -207,6 +210,8 @@ const LiveCallInterface = () => {
             audioRef.current.play();
           }
         }
+        setIsProcessing(false);
+        setUserTranscript(''); // Reset transcript after processing
       }
     };
 
@@ -270,17 +275,33 @@ const LiveCallInterface = () => {
               objectFit="cover"
               alt="Remote user"
               data-ai-hint={remoteUser.imageHint}
+              className="opacity-70"
             />
           )}
-          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+
+          {/* Header */}
+          <div className="absolute left-0 top-0 flex w-full items-center justify-between p-4">
+            <div className="flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 text-sm text-white">
+              <div className="h-2 w-2 rounded-full bg-red-500" />
+              <span>LIVE</span>
+            </div>
+            <Button size="icon" variant="ghost" className="text-white">
+              <Expand />
+            </Button>
+          </div>
+
+          {/* Bottom Info */}
           <div className="absolute bottom-4 left-4 text-white">
             <p className="font-bold">Ana (AI Persona)</p>
+            <p className="text-xs">London, UK</p>
           </div>
+
           {/* My Video Feed */}
-          <div className="absolute right-4 top-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary shadow-lg md:h-32 md:w-56">
+          <div className="absolute right-4 top-16 h-24 w-40 overflow-hidden rounded-md border-2 border-primary/50 bg-secondary shadow-lg md:h-32 md:w-56">
             <video
               ref={videoRef}
-              className="h-full w-full -scale-x-100 transform bg-secondary object-cover"
+              className="h-full w-full -scale-x-100 transform object-cover"
               autoPlay
               muted
               playsInline
@@ -290,7 +311,11 @@ const LiveCallInterface = () => {
                 <VideoOff className="h-8 w-8 text-muted-foreground" />
               </div>
             )}
+            <div className="absolute bottom-1 left-2 text-xs font-medium text-white">
+              You
+            </div>
           </div>
+
           {/* Controls */}
           <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-full bg-black/50 p-3 backdrop-blur-md">
             <Button
@@ -298,9 +323,13 @@ const LiveCallInterface = () => {
               size="icon"
               className="h-12 w-12 rounded-full"
               onClick={toggleListening}
-              disabled={!isAvailable}
+              disabled={!isAvailable || isProcessing}
             >
-              {isListening ? <MicOff /> : <Mic />}
+              {isListening || isProcessing ? (
+                <LoaderCircle className="animate-spin" />
+              ) : (
+                <Mic />
+              )}
             </Button>
             <Button
               variant="secondary"
@@ -310,36 +339,57 @@ const LiveCallInterface = () => {
             >
               {isCameraOff ? <VideoOff /> : <Video />}
             </Button>
-            <Button variant="destructive" size="icon" className="h-12 w-12 rounded-full">
+            <Button
+              variant="destructive"
+              size="icon"
+              className="h-12 w-12 rounded-full"
+            >
               <PhoneOff />
             </Button>
           </div>
         </div>
 
         {/* Other Participants */}
-        <div className="space-y-2">
-            <h3 className="font-semibold">Other Participants</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {participants.map(p => {
-                    const img = getPlaceholderImage(p.id);
-                    return (
-                    <div key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-2">
-                        <Avatar>
-                            {img && <AvatarImage src={img.imageUrl} />}
-                            <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm font-medium">{p.name}</span>
-                    </div>
-                    )
-                })}
-            </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="bg-card/50">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Meeting Insights
+              </CardTitle>
+              <Lightbulb className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-xs text-muted-foreground">
+                AI is generating insights...
+              </div>
+            </CardContent>
+          </Card>
+          {participants.map(p => {
+            const img = getPlaceholderImage(p.id);
+            return (
+              <div
+                key={p.id}
+                className="flex items-center justify-between gap-3 rounded-lg bg-card/50 p-3"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar>
+                    {img && <AvatarImage src={img.imageUrl} />}
+                    <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium">{p.name}</span>
+                </div>
+                <MicOff className="h-4 w-4 text-muted-foreground" />
+              </div>
+            );
+          })}
         </div>
       </div>
 
       {/* Right Column: Chat Room */}
-      <Card className="flex h-full flex-col lg:col-span-1">
-        <CardHeader>
+      <Card className="flex h-full flex-col bg-card/50 lg:col-span-1">
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Chat Room</CardTitle>
+          <MoreVertical className="h-5 w-5 text-muted-foreground" />
         </CardHeader>
         <ScrollArea className="flex-1 px-4">
           <div className="space-y-6">
@@ -363,15 +413,29 @@ const LiveCallInterface = () => {
                   {item.translation && (
                     <p className="italic opacity-80">{item.translation}</p>
                   )}
+                  {item.translation === 'Translating...' && (
+                    <LoaderCircle className="mt-1 h-4 w-4 animate-spin" />
+                  )}
                 </div>
                 {item.insight && (
-                    <div className="max-w-xs rounded-lg border border-yellow-400/20 bg-yellow-900/20 p-3 text-xs">
-                        <p className="flex items-center gap-2 font-semibold text-yellow-300"><Lightbulb className="h-4 w-4" /> Cultural Insight</p>
-                        <p className="mt-1 text-yellow-100/90">{item.insight}</p>
-                    </div>
+                  <div className="max-w-xs rounded-lg border border-yellow-400/20 bg-yellow-900/20 p-3 text-xs">
+                    <p className="flex items-center gap-2 font-semibold text-yellow-300">
+                      <Lightbulb className="h-4 w-4" /> Cultural Insight
+                    </p>
+                    <p className="mt-1 text-yellow-100/90">{item.insight}</p>
+                  </div>
                 )}
               </div>
             ))}
+            {isProcessing &&
+              conversation.length > 0 &&
+              conversation[conversation.length - 1].speaker === 'me' && (
+                <div className={cn('flex flex-col items-start gap-2')}>
+                  <div className={cn('max-w-xs rounded-lg bg-secondary p-3 text-sm')}>
+                    <LoaderCircle className="h-4 w-4 animate-spin" />
+                  </div>
+                </div>
+              )}
             <div ref={transcriptEndRef} />
           </div>
         </ScrollArea>
