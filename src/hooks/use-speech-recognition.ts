@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 // For browsers that don't support SpeechRecognition natively yet.
 declare global {
@@ -11,16 +11,15 @@ declare global {
 }
 
 type UseSpeechRecognitionProps = {
-  onTranscriptChange: (transcript: string) => void;
   lang: string;
 };
 
 export const useSpeechRecognition = ({
-  onTranscriptChange,
   lang,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
+  const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<any | null>(null);
 
   useEffect(() => {
@@ -30,12 +29,12 @@ export const useSpeechRecognition = ({
     if (SpeechRecognition) {
       setIsAvailable(true);
       const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = lang; // Use the passed language
+      recognition.continuous = true; // Keep listening even after a pause
+      recognition.interimResults = true; // Get results as they are being processed
+      recognition.lang = lang;
 
-      // This is the correct way to handle results to avoid duplication.
       let finalTranscript = '';
+      
       recognition.onresult = (event: any) => {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -45,7 +44,7 @@ export const useSpeechRecognition = ({
             interimTranscript += event.results[i][0].transcript;
           }
         }
-        onTranscriptChange(finalTranscript + interimTranscript);
+        setTranscript(finalTranscript + interimTranscript);
       };
 
       recognition.onerror = (event: any) => {
@@ -54,45 +53,34 @@ export const useSpeechRecognition = ({
       };
 
       recognition.onend = () => {
+        // When recognition ends, the final part of the transcript is the complete sentence.
+        if (finalTranscript) {
+          setTranscript(finalTranscript);
+        }
         setIsListening(false);
       };
-
-      recognition.onstart = () => {
-        finalTranscript = ''; // Reset final transcript on new start
-      };
-
+      
       recognitionRef.current = recognition;
 
-      // Clean up previous recognition instance
       return () => {
         recognition.stop();
       };
     } else {
       setIsAvailable(false);
     }
-  }, [onTranscriptChange, lang]);
+  }, [lang]);
 
-  const toggleListening = () => {
+  const toggleListening = useCallback(() => {
     if (recognitionRef.current) {
-        if (isListening) {
-          recognitionRef.current.stop();
-          setIsListening(false);
-        } else {
-          onTranscriptChange('');
-          recognitionRef.current.start();
-          setIsListening(true);
-        }
-    }
-  };
-
-  // Stop listening when component unmounts for safety
-  useEffect(() => {
-    return () => {
-      if (recognitionRef.current) {
+      if (isListening) {
         recognitionRef.current.stop();
+      } else {
+        setTranscript(''); // Clear previous transcript before starting new recognition
+        recognitionRef.current.start();
       }
-    };
-  }, []);
+      setIsListening(prev => !prev);
+    }
+  }, [isListening]);
 
-  return { isListening, isAvailable, toggleListening };
+  return { isListening, isAvailable, toggleListening, transcript };
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useActionState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -21,7 +21,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
@@ -112,6 +111,8 @@ const langCodeMapping: { [key: string]: string } = {
   telugu: 'te-IN',
   urdu: 'ur-IN',
   punjabi: 'pa-IN',
+  bhojpuri: 'bho-IN',
+  malayalam: 'ml-IN',
 };
 
 const languages = [
@@ -125,6 +126,10 @@ const languages = [
   { value: 'marathi', label: 'Marathi' },
   { value: 'tamil', label: 'Tamil' },
   { value: 'telugu', label: 'Telugu' },
+  { value: 'bhojpuri', label: 'Bhojpuri' },
+  { value: 'malayalam', label: 'Malayalam' },
+  { value: 'urdu', label: 'Urdu' },
+  { value: 'punjabi', label: 'Punjabi' },
 ];
 
 const LiveCallInterface = () => {
@@ -144,17 +149,15 @@ const LiveCallInterface = () => {
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const { isListening, isAvailable, toggleListening } = useSpeechRecognition({
-    onTranscriptChange: setUserTranscript,
-    lang: langCodeMapping[userLanguage] || 'en-US',
-  });
+  const { isListening, isAvailable, toggleListening, transcript } =
+    useSpeechRecognition({ lang: langCodeMapping[userLanguage] || 'en-US' });
 
   // Main conversation logic
   useEffect(() => {
     const processUserTurn = async () => {
-      if (userTranscript) {
+      if (transcript) {
         setIsProcessing(true);
-        const currentTranscript = userTranscript;
+        const currentTranscript = transcript;
 
         const userTurn: TranscriptItem = {
           id: Date.now(),
@@ -164,79 +167,91 @@ const LiveCallInterface = () => {
         };
         setConversation(prev => [...prev, userTurn]);
 
-        const { translatedText: englishTranslation } =
-          await realTimeTranslationWithContext({
-            text: currentTranscript,
-            sourceLanguage: userLanguage,
-            targetLanguage: 'english',
+        try {
+          const { translatedText: englishTranslation } =
+            await realTimeTranslationWithContext({
+              text: currentTranscript,
+              sourceLanguage: userLanguage,
+              targetLanguage: 'english',
+            });
+
+          const finalEnglishTranslation =
+            englishTranslation || '[Translation Error]';
+
+          setConversation(prev =>
+            prev.map(t =>
+              t.id === userTurn.id
+                ? { ...t, translation: finalEnglishTranslation }
+                : t
+            )
+          );
+
+          const userHistoryItem: ChatHistoryItem = {
+            role: 'user',
+            content: [{ text: finalEnglishTranslation }],
+          };
+
+          const historyForBot = [...chatHistory, userHistoryItem];
+
+          const { response: botEnglishResponse } = await chatWithBot({
+            query: finalEnglishTranslation,
+            history: historyForBot,
           });
-        
-        const finalEnglishTranslation = englishTranslation || "[Translation Error]";
 
-        setConversation(prev =>
-          prev.map(t =>
-            t.id === userTurn.id ? { ...t, translation: finalEnglishTranslation } : t
-          )
-        );
+          const botHistoryItem: ChatHistoryItem = {
+            role: 'model',
+            content: [{ text: botEnglishResponse }],
+          };
 
-        const userHistoryItem: ChatHistoryItem = {
-          role: 'user',
-          content: [{ text: finalEnglishTranslation }],
-        };
-        
-        // Pass the latest history to the bot
-        const historyForBot = [...chatHistory, userHistoryItem];
-        
-        const { response: botEnglishResponse } = await chatWithBot({
-          query: finalEnglishTranslation,
-          history: historyForBot,
-        });
+          setChatHistory(prev => [...prev, userHistoryItem, botHistoryItem]);
 
-        const botHistoryItem: ChatHistoryItem = {
-          role: 'model',
-          content: [{ text: botEnglishResponse }],
-        };
-        
-        // Update the main chat history state
-        setChatHistory(prev => [...prev, userHistoryItem, botHistoryItem]);
+          const {
+            translatedText: botForeignResponse,
+            culturalInsights,
+          } = await realTimeTranslationWithContext({
+            text: botEnglishResponse,
+            sourceLanguage: 'english',
+            targetLanguage: userLanguage,
+          });
 
+          const botTurn: TranscriptItem = {
+            id: Date.now() + 1,
+            speaker: 'other',
+            text: botForeignResponse || '...',
+            translation: botEnglishResponse,
+            insight: culturalInsights,
+          };
+          setConversation(prev => [...prev, botTurn]);
 
-        const {
-          translatedText: botForeignResponse,
-          culturalInsights,
-        } = await realTimeTranslationWithContext({
-          text: botEnglishResponse,
-          sourceLanguage: 'english',
-          targetLanguage: userLanguage,
-        });
-
-        const botTurn: TranscriptItem = {
-          id: Date.now() + 1,
-          speaker: 'other',
-          text: botForeignResponse || '...',
-          translation: botEnglishResponse,
-          insight: culturalInsights,
-        };
-        setConversation(prev => [...prev, botTurn]);
-
-        if (botForeignResponse) {
-          const { audioData } = await textToSpeech(botForeignResponse);
-          if (audioData && audioRef.current) {
-            audioRef.current.src = audioData;
-            audioRef.current.play();
+          if (botForeignResponse) {
+            const { audioData } = await textToSpeech(botForeignResponse);
+            if (audioData && audioRef.current) {
+              audioRef.current.src = audioData;
+              audioRef.current.play();
+            }
           }
+        } catch (error) {
+          console.error('Conversation processing error:', error);
+          toast({
+            variant: 'destructive',
+            title: 'An error occurred',
+            description: 'Could not process the conversation turn.',
+          });
+          // Remove the user turn that failed
+          setConversation(prev => prev.filter(t => t.id !== userTurn.id));
+        } finally {
+          setIsProcessing(false);
+          setUserTranscript('');
         }
-        setIsProcessing(false);
-        setUserTranscript('');
       }
     };
 
-    if (!isListening && userTranscript) {
+    if (!isListening && transcript) {
       processUserTurn();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isListening, userTranscript]);
-  
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isListening, transcript]);
+
   // Scroll transcript to bottom
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -280,110 +295,100 @@ const LiveCallInterface = () => {
   const remoteUser = getPlaceholderImage('remote-user-avatar');
 
   return (
-    <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3">
-      {/* Left Column: Video Feeds and Controls */}
-      <div className="flex flex-col gap-4 lg:col-span-2">
-        <div className="relative flex-1 overflow-hidden rounded-lg bg-card">
-          {remoteUser && (
-            <Image
-              src={remoteUser.imageUrl}
-              layout="fill"
-              objectFit="cover"
-              alt="Remote user"
-              data-ai-hint={remoteUser.imageHint}
-              className="opacity-70"
-            />
+    <div className="flex h-full flex-col">
+      {/* Video Call Section */}
+      <div className="relative flex-1 bg-black">
+        {remoteUser && (
+          <Image
+            src={remoteUser.imageUrl}
+            layout="fill"
+            objectFit="cover"
+            alt="Remote user"
+            data-ai-hint={remoteUser.imageHint}
+            className="opacity-70"
+            priority
+          />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+        
+        <div className="absolute left-4 top-4">
+            <Label htmlFor="userLanguage" className="text-white/80">Your Language</Label>
+            <Select value={userLanguage} onValueChange={setUserLanguage}>
+              <SelectTrigger id="userLanguage" className="w-40 text-white bg-black/30 border-white/30">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map(l => (
+                  <SelectItem key={l.value} value={l.value}>
+                    {l.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+        </div>
+        
+        <div className="absolute bottom-16 left-4 text-white">
+          <p className="font-bold">Ana (AI Friend)</p>
+          <p className="text-xs">London, UK</p>
+        </div>
+
+        <div className="absolute right-4 top-4 h-32 w-24 overflow-hidden rounded-md border-2 border-primary/50 bg-secondary shadow-lg md:h-40 md:w-32">
+          <video
+            ref={videoRef}
+            className="h-full w-full -scale-x-100 transform object-cover"
+            autoPlay
+            muted
+            playsInline
+          />
+          {isCameraOff && (
+            <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+              <VideoOff className="h-8 w-8 text-muted-foreground" />
+            </div>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-
-          {/* Header */}
-          <div className="absolute left-0 top-0 flex w-full items-center justify-between p-4">
-            <div className="flex items-center gap-2 rounded-full bg-black/50 px-3 py-1 text-sm text-white">
-              <div className="h-2 w-2 rounded-full bg-red-500" />
-              <span>LIVE</span>
-            </div>
-             <div className='w-48'>
-                <Label htmlFor="userLanguage" className='text-white'>Your Language</Label>
-                <Select value={userLanguage} onValueChange={setUserLanguage}>
-                  <SelectTrigger id="userLanguage" className='text-white'>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {languages.map(l => (
-                      <SelectItem key={l.value} value={l.value}>
-                        {l.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-            </div>
-          </div>
-
-          <div className="absolute bottom-4 left-4 text-white">
-            <p className="font-bold">Ana (AI Friend)</p>
-            <p className="text-xs">London, UK</p>
-          </div>
-
-          <div className="absolute bottom-4 right-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary/50 bg-secondary shadow-lg md:h-32 md:w-56">
-            <video
-              ref={videoRef}
-              className="h-full w-full -scale-x-100 transform object-cover"
-              autoPlay
-              muted
-              playsInline
-            />
-            {isCameraOff && (
-              <div className="absolute inset-0 flex items-center justify-center bg-secondary">
-                <VideoOff className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
-            <div className="absolute bottom-1 left-2 text-xs font-medium text-white">
-              You
-            </div>
-          </div>
-
-          {/* Controls */}
-          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-full bg-black/50 p-3 backdrop-blur-md">
-            <Button
-              variant={isListening ? 'destructive' : 'secondary'}
-              size="icon"
-              className="h-12 w-12 rounded-full"
-              onClick={toggleListening}
-              disabled={!isAvailable || isProcessing}
-            >
-              {isListening || isProcessing ? (
-                <LoaderCircle className="animate-spin" />
-              ) : (
-                <Mic />
-              )}
-            </Button>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="h-12 w-12 rounded-full"
-              onClick={() => setIsCameraOff(!isCameraOff)}
-            >
-              {isCameraOff ? <VideoOff /> : <Video />}
-            </Button>
-            <Button
-              variant="destructive"
-              size="icon"
-              className="h-12 w-12 rounded-full"
-            >
-              <PhoneOff />
-            </Button>
+          <div className="absolute bottom-1 left-2 text-xs font-medium text-white">
+            You
           </div>
         </div>
-      </div>
 
-      {/* Right Column: Chat Room */}
-      <Card className="flex h-full flex-col bg-card/50 lg:col-span-1">
-        <CardHeader>
-          <CardTitle>Live Transcript</CardTitle>
-          <CardDescription>Real-time translation of your call.</CardDescription>
+        <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-full bg-black/50 p-3 backdrop-blur-md">
+          <Button
+            variant={isListening ? 'destructive' : 'secondary'}
+            size="icon"
+            className="h-12 w-12 rounded-full"
+            onClick={toggleListening}
+            disabled={!isAvailable || isProcessing}
+          >
+            {isListening || isProcessing ? (
+              <LoaderCircle className="animate-spin" />
+            ) : (
+              <Mic />
+            )}
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            className="h-12 w-12 rounded-full"
+            onClick={() => setIsCameraOff(!isCameraOff)}
+          >
+            {isCameraOff ? <VideoOff /> : <Video />}
+          </Button>
+          <Button
+            variant="destructive"
+            size="icon"
+            className="h-12 w-12 rounded-full"
+          >
+            <PhoneOff />
+          </Button>
+        </div>
+      </div>
+      
+      {/* Transcript/Context Section */}
+      <Card className="flex h-1/2 max-h-[50vh] flex-col rounded-t-2xl border-t-4 border-primary bg-card/80 backdrop-blur-xl lg:h-2/5 lg:max-h-[40vh]">
+        <CardHeader className="py-3">
+          <CardTitle>Live Transcript & Context</CardTitle>
         </CardHeader>
         <ScrollArea className="flex-1 px-4">
-          <div className="space-y-6">
+          <div className="space-y-6 pb-4">
             {conversation.map(item => (
               <div
                 key={item.id}
@@ -394,7 +399,7 @@ const LiveCallInterface = () => {
               >
                 <div
                   className={cn(
-                    'max-w-xs rounded-lg p-3 text-sm',
+                    'max-w-md rounded-lg p-3 text-sm shadow-md',
                     item.speaker === 'me'
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-secondary'
@@ -409,7 +414,7 @@ const LiveCallInterface = () => {
                   )}
                 </div>
                 {item.insight && (
-                  <div className="max-w-xs rounded-lg border border-yellow-400/20 bg-yellow-900/20 p-3 text-xs">
+                  <div className="max-w-md rounded-lg border border-yellow-400/20 bg-yellow-900/20 p-3 text-xs shadow-md">
                     <p className="flex items-center gap-2 font-semibold text-yellow-300">
                       <Lightbulb className="h-4 w-4" /> Cultural Insight
                     </p>
@@ -418,9 +423,7 @@ const LiveCallInterface = () => {
                 )}
               </div>
             ))}
-            {isProcessing &&
-              conversation.length > 0 &&
-              conversation[conversation.length - 1].speaker === 'me' && (
+             {isProcessing && !isListening && (
                 <div className={cn('flex flex-col items-start gap-2')}>
                   <div className={cn('max-w-xs rounded-lg bg-secondary p-3 text-sm')}>
                     <LoaderCircle className="h-4 w-4 animate-spin" />
@@ -430,9 +433,9 @@ const LiveCallInterface = () => {
             <div ref={transcriptEndRef} />
           </div>
         </ScrollArea>
-        <CardFooter className="pt-4 border-t">
-           <p className="text-xs text-muted-foreground text-center w-full">This is a demo. Conversation is with an AI.</p>
-        </CardFooter>
+        <CardContent className="border-t p-2">
+           <p className="text-center text-xs text-muted-foreground">This is an AI-powered demo. The person on the call is not real.</p>
+        </CardContent>
       </Card>
       <audio ref={audioRef} className="hidden" />
     </div>
@@ -468,7 +471,7 @@ export default function LiveCallPage() {
       description: 'You can now access the Live Call feature.',
     });
   };
-  
+
   if (!user) {
     return <div className="h-full" />;
   }
