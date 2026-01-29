@@ -9,13 +9,16 @@ import {
   Video,
   VideoOff,
   Mic,
+  MicOff,
   PhoneOff,
   User,
   Settings2,
   LoaderCircle,
-  Languages,
+  MessageCircle,
+  Lightbulb,
+  Heart,
+  Expand,
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -24,6 +27,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -35,6 +39,8 @@ import { chatWithBot } from '@/ai/flows/chatbot';
 import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import type { ChatHistoryItem } from '@/lib/definitions';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
 
 const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
   return (
@@ -88,8 +94,9 @@ const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
 type TranscriptItem = {
   id: number;
   speaker: 'me' | 'other';
-  originalText: string;
-  translatedText: string;
+  text: string;
+  translation?: string;
+  insight?: string;
 };
 
 // Language mapping for speech recognition
@@ -103,6 +110,13 @@ const langCodeMapping: { [key: string]: string } = {
   // Add more mappings as needed
 };
 
+const participants = [
+  { name: 'Johna B.', id: 'participant-1' },
+  { name: 'Ethan C.', id: 'participant-2' },
+  { name: 'Andy T.', id: 'participant-3' },
+  { name: 'Jordan K.', id: 'participant-4' },
+];
+
 const LiveCallInterface = () => {
   const { toast } = useToast();
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -113,44 +127,31 @@ const LiveCallInterface = () => {
     boolean | null
   >(null);
   const [isCameraOff, setIsCameraOff] = useState(false);
-  const [callTime, setCallTime] = useState(0);
-  const [isBotThinking, setIsBotThinking] = useState(false);
 
-  // --- Demo State ---
-  // Defaulting to Hindi for the demo as requested. This could be fetched from user profile.
   const [userLanguage, setUserLanguage] = useState('hindi');
   const [userTranscript, setUserTranscript] = useState('');
   const [conversation, setConversation] = useState<TranscriptItem[]>([]);
   const [chatHistory, setChatHistory] = useState<ChatHistoryItem[]>([]);
-  // --- End Demo State ---
 
   const { isListening, isAvailable, toggleListening } = useSpeechRecognition({
     onTranscriptChange: setUserTranscript,
     lang: langCodeMapping[userLanguage] || 'en-US',
   });
 
-  // Call timer
-  useEffect(() => {
-    const timer = setInterval(() => setCallTime(t => t + 1), 1000);
-    return () => clearInterval(timer);
-  }, []);
-
   // Main conversation logic
   useEffect(() => {
     const processUserTurn = async () => {
       if (userTranscript) {
-        // 1. Add user's transcribed speech to the conversation display
         const userTurn: TranscriptItem = {
           id: Date.now(),
           speaker: 'me',
-          originalText: userTranscript,
-          translatedText: 'Translating...',
+          text: userTranscript,
+          translation: 'Translating...',
         };
         setConversation(prev => [...prev, userTurn]);
-        const currentTranscript = userTranscript; // Capture transcript before clearing
-        setUserTranscript(''); // Clear the raw transcript
+        const currentTranscript = userTranscript;
+        setUserTranscript('');
 
-        // 2. Translate user's speech to English for the bot
         const { translatedText: englishTranslation } =
           await realTimeTranslationWithContext({
             text: currentTranscript,
@@ -158,53 +159,47 @@ const LiveCallInterface = () => {
             targetLanguage: 'english',
           });
 
-        // Update the user's turn in the UI with the English translation
         setConversation(prev =>
           prev.map(t =>
-            t.id === userTurn.id ? { ...t, translatedText: englishTranslation } : t
+            t.id === userTurn.id ? { ...t, translation: englishTranslation } : t
           )
         );
 
-        // 3. Add to chat history for context, creating a new history for this turn
         const userHistoryItem: ChatHistoryItem = {
           role: 'user',
           content: [{ text: englishTranslation }],
         };
         const historyForThisTurn = [...chatHistory, userHistoryItem];
 
-        // 4. Trigger bot's response
-        setIsBotThinking(true);
         const { response: botEnglishResponse } = await chatWithBot({
           query: englishTranslation,
-          history: historyForThisTurn, // Use the up-to-date history
+          history: historyForThisTurn,
         });
 
-        // 5. Update the full chat history with both the user's and bot's turn
         const botHistoryItem: ChatHistoryItem = {
           role: 'model',
           content: [{ text: botEnglishResponse }],
         };
         setChatHistory([...historyForThisTurn, botHistoryItem]);
 
-        // 6. Translate bot's English response back to the user's language
-        const { translatedText: botForeignResponse } =
-          await realTimeTranslationWithContext({
-            text: botEnglishResponse,
-            sourceLanguage: 'english',
-            targetLanguage: userLanguage,
-          });
+        const {
+          translatedText: botForeignResponse,
+          culturalInsights,
+        } = await realTimeTranslationWithContext({
+          text: botEnglishResponse,
+          sourceLanguage: 'english',
+          targetLanguage: userLanguage,
+        });
 
-        // 7. Add bot's turn to conversation display
         const botTurn: TranscriptItem = {
           id: Date.now() + 1,
           speaker: 'other',
-          originalText: botForeignResponse || '...',
-          translatedText: botEnglishResponse,
+          text: botForeignResponse || '...',
+          translation: botEnglishResponse,
+          insight: culturalInsights,
         };
         setConversation(prev => [...prev, botTurn]);
-        setIsBotThinking(false);
 
-        // 8. Generate and play audio for the bot's translated response
         if (botForeignResponse) {
           const { audioData } = await textToSpeech(botForeignResponse);
           if (audioData && audioRef.current) {
@@ -215,7 +210,6 @@ const LiveCallInterface = () => {
       }
     };
 
-    // Trigger processing when the user stops speaking
     if (!isListening && userTranscript) {
       processUserTurn();
     }
@@ -224,7 +218,7 @@ const LiveCallInterface = () => {
   // Scroll transcript to bottom
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [conversation, isBotThinking]);
+  }, [conversation]);
 
   // Camera permission logic
   useEffect(() => {
@@ -232,8 +226,9 @@ const LiveCallInterface = () => {
     const getCameraPermission = async () => {
       if (isCameraOff) {
         if (videoRef.current?.srcObject) {
-          const currentStream = videoRef.current.srcObject as MediaStream;
-          currentStream.getTracks().forEach(track => track.stop());
+          (videoRef.current.srcObject as MediaStream)
+            .getTracks()
+            .forEach(track => track.stop());
           videoRef.current.srcObject = null;
         }
         return;
@@ -252,87 +247,147 @@ const LiveCallInterface = () => {
           variant: 'destructive',
           title: 'Camera Access Denied',
           description:
-            'Please enable camera permissions in your browser settings to use this app.',
+            'Please enable camera permissions in your browser settings.',
         });
       }
     };
-
     getCameraPermission();
-
-    return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-      }
-    };
+    return () => stream?.getTracks().forEach(track => track.stop());
   }, [isCameraOff, toast]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-    const secs = (seconds % 60).toString().padStart(2, '0');
-    return `${mins}:${secs}`;
-  };
 
   const remoteUser = getPlaceholderImage('remote-user-avatar');
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <div className="relative w-full flex-1 overflow-hidden rounded-lg bg-black shadow-lg">
-        {remoteUser && (
-          <Image
-            src={remoteUser.imageUrl}
-            layout="fill"
-            objectFit="cover"
-            alt="Remote user"
-            className="opacity-50"
-          />
-        )}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <Avatar className="h-40 w-40 border-4 border-background/50">
-            {remoteUser && <AvatarImage src={remoteUser.imageUrl} />}
-            <AvatarFallback className="text-6xl"><User /></AvatarFallback>
-          </Avatar>
-        </div>
-        <div className="absolute bottom-4 left-4 rounded-lg bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur-sm">
-          <p className="font-bold">Ana García</p>
-          <p className="text-xs">{formatTime(callTime)}</p>
-        </div>
-        <div className="absolute right-4 top-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary shadow-md md:h-32 md:w-56">
-          <video ref={videoRef} className="h-full w-full -scale-x-100 transform bg-secondary object-cover" autoPlay muted playsInline />
-          {isCameraOff && <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary"><VideoOff className="h-8 w-8 text-muted-foreground" /></div>}
-          {hasCameraPermission === null && !isCameraOff && <div className="absolute inset-0 flex h-full w-full items-center justify-center bg-secondary/80"><Video className="h-8 w-8 animate-pulse text-muted-foreground" /></div>}
-          {hasCameraPermission === false && !isCameraOff && <div className="absolute inset-0 flex items-center justify-center bg-destructive/90 p-2 text-center"><Alert variant="destructive" className="border-0 bg-transparent text-destructive-foreground"><AlertTitle className="text-sm font-bold">Camera Denied</AlertTitle></Alert></div>}
-        </div>
-      </div>
-      
-      <div className="flex items-center justify-center gap-4 rounded-lg bg-card p-2">
-        <Button variant={isListening ? 'destructive' : 'default'} size="icon" className="h-14 w-14 rounded-full" onClick={toggleListening} disabled={!isAvailable}><Mic /></Button>
-        <Button variant={isCameraOff ? 'destructive' : 'outline'} size="icon" className="h-14 w-14 rounded-full" onClick={() => setIsCameraOff(!isCameraOff)}>{isCameraOff ? <VideoOff /> : <Video />}</Button>
-        <Button variant="destructive" size="icon" className="h-14 w-14 rounded-full"><PhoneOff /></Button>
-        <Button variant="outline" size="icon" className="h-14 w-14 rounded-full"><Settings2 /></Button>
-      </div>
-
-      <Card className="flex h-[250px] flex-col">
-        <CardHeader className="flex-shrink-0"><CardTitle>Live Transcript</CardTitle></CardHeader>
-        <CardContent className="flex-1 overflow-y-auto">
-          <div className="space-y-6">
-            {conversation.map(item => (
-              <div key={item.id} className={cn('flex flex-col', item.speaker === 'me' ? 'items-end' : 'items-start')}>
-                <div className={cn('max-w-md rounded-lg p-3 text-sm', item.speaker === 'me' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                  <p className="font-bold">{item.originalText}</p>
-                  <p className="italic opacity-80">{item.translatedText}</p>
-                </div>
-                <p className="mt-1 text-xs text-muted-foreground">{item.speaker === 'me' ? 'You' : 'Ana García'}</p>
-              </div>
-            ))}
-            {isBotThinking && (
-              <div className="flex flex-col items-start">
-                <div className="max-w-xs rounded-lg bg-muted p-3 text-sm"><LoaderCircle className="h-5 w-5 animate-spin" /></div>
-                <p className="mt-1 text-xs text-muted-foreground">Ana García</p>
+    <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3">
+      {/* Left Column: Video Feeds and Controls */}
+      <div className="flex flex-col gap-4 lg:col-span-2">
+        {/* Main Video Feed */}
+        <div className="relative flex-1 overflow-hidden rounded-lg bg-card">
+          {remoteUser && (
+            <Image
+              src={remoteUser.imageUrl}
+              layout="fill"
+              objectFit="cover"
+              alt="Remote user"
+              data-ai-hint={remoteUser.imageHint}
+            />
+          )}
+          <div className="absolute inset-0 bg-black/30" />
+          <div className="absolute bottom-4 left-4 text-white">
+            <p className="font-bold">Ana (AI Persona)</p>
+          </div>
+          {/* My Video Feed */}
+          <div className="absolute right-4 top-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary shadow-lg md:h-32 md:w-56">
+            <video
+              ref={videoRef}
+              className="h-full w-full -scale-x-100 transform bg-secondary object-cover"
+              autoPlay
+              muted
+              playsInline
+            />
+            {isCameraOff && (
+              <div className="absolute inset-0 flex items-center justify-center bg-secondary">
+                <VideoOff className="h-8 w-8 text-muted-foreground" />
               </div>
             )}
+          </div>
+          {/* Controls */}
+          <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-4 rounded-full bg-black/50 p-3 backdrop-blur-md">
+            <Button
+              variant={isListening ? 'destructive' : 'secondary'}
+              size="icon"
+              className="h-12 w-12 rounded-full"
+              onClick={toggleListening}
+              disabled={!isAvailable}
+            >
+              {isListening ? <MicOff /> : <Mic />}
+            </Button>
+            <Button
+              variant="secondary"
+              size="icon"
+              className="h-12 w-12 rounded-full"
+              onClick={() => setIsCameraOff(!isCameraOff)}
+            >
+              {isCameraOff ? <VideoOff /> : <Video />}
+            </Button>
+            <Button variant="destructive" size="icon" className="h-12 w-12 rounded-full">
+              <PhoneOff />
+            </Button>
+          </div>
+        </div>
+
+        {/* Other Participants */}
+        <div className="space-y-2">
+            <h3 className="font-semibold">Other Participants</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {participants.map(p => {
+                    const img = getPlaceholderImage(p.id);
+                    return (
+                    <div key={p.id} className="flex items-center gap-3 rounded-lg bg-card p-2">
+                        <Avatar>
+                            {img && <AvatarImage src={img.imageUrl} />}
+                            <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm font-medium">{p.name}</span>
+                    </div>
+                    )
+                })}
+            </div>
+        </div>
+      </div>
+
+      {/* Right Column: Chat Room */}
+      <Card className="flex h-full flex-col lg:col-span-1">
+        <CardHeader>
+          <CardTitle>Chat Room</CardTitle>
+        </CardHeader>
+        <ScrollArea className="flex-1 px-4">
+          <div className="space-y-6">
+            {conversation.map(item => (
+              <div
+                key={item.id}
+                className={cn(
+                  'flex flex-col gap-2',
+                  item.speaker === 'me' ? 'items-end' : 'items-start'
+                )}
+              >
+                <div
+                  className={cn(
+                    'max-w-xs rounded-lg p-3 text-sm',
+                    item.speaker === 'me'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-secondary'
+                  )}
+                >
+                  <p className="font-bold">{item.text}</p>
+                  {item.translation && (
+                    <p className="italic opacity-80">{item.translation}</p>
+                  )}
+                </div>
+                {item.insight && (
+                    <div className="max-w-xs rounded-lg border border-yellow-400/20 bg-yellow-900/20 p-3 text-xs">
+                        <p className="flex items-center gap-2 font-semibold text-yellow-300"><Lightbulb className="h-4 w-4" /> Cultural Insight</p>
+                        <p className="mt-1 text-yellow-100/90">{item.insight}</p>
+                    </div>
+                )}
+              </div>
+            ))}
             <div ref={transcriptEndRef} />
           </div>
-        </CardContent>
+        </ScrollArea>
+        <CardFooter className="pt-4">
+          <div className="relative w-full">
+            <Input placeholder="Type a message..." className="pr-10" />
+            <Button
+              type="submit"
+              size="icon"
+              variant="ghost"
+              className="absolute right-1 top-1/2 -translate-y-1/2"
+            >
+              <MessageCircle />
+            </Button>
+          </div>
+        </CardFooter>
       </Card>
       <audio ref={audioRef} className="hidden" />
     </div>
