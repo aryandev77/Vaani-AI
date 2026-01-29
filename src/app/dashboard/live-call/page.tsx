@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useActionState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -9,13 +9,9 @@ import {
   Video,
   VideoOff,
   Mic,
-  MicOff,
   PhoneOff,
   LoaderCircle,
-  MessageCircle,
   Lightbulb,
-  Expand,
-  MoreVertical,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -28,7 +24,6 @@ import {
   CardFooter,
 } from '@/components/ui/card';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { useSpeechRecognition } from '@/hooks/use-speech-recognition';
@@ -37,7 +32,15 @@ import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation
 import { textToSpeech } from '@/ai/flows/text-to-speech';
 import type { ChatHistoryItem } from '@/lib/definitions';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { useUser } from '@/firebase';
 
 const UpgradeView = ({ onUpgrade }: { onUpgrade: () => void }) => {
   return (
@@ -98,12 +101,12 @@ type TranscriptItem = {
 
 // Language mapping for speech recognition
 const langCodeMapping: { [key: string]: string } = {
+  english: 'en-US',
   hindi: 'hi-IN',
   bengali: 'bn-IN',
   spanish: 'es-ES',
   french: 'fr-FR',
   german: 'de-DE',
-  english: 'en-US',
   marathi: 'mr-IN',
   tamil: 'ta-IN',
   telugu: 'te-IN',
@@ -111,11 +114,17 @@ const langCodeMapping: { [key: string]: string } = {
   punjabi: 'pa-IN',
 };
 
-const participants = [
-  { name: 'Johna B.', id: 'participant-1' },
-  { name: 'Ethan C.', id: 'participant-2' },
-  { name: 'Andy T.', id: 'participant-3' },
-  { name: 'Jordan K.', id: 'participant-4' },
+const languages = [
+  { value: 'english', label: 'English' },
+  { value: 'spanish', label: 'Spanish' },
+  { value: 'french', label: 'French' },
+  { value: 'german', label: 'German' },
+  { value: 'japanese', label: 'Japanese' },
+  { value: 'hindi', label: 'Hindi' },
+  { value: 'bengali', label: 'Bengali' },
+  { value: 'marathi', label: 'Marathi' },
+  { value: 'tamil', label: 'Tamil' },
+  { value: 'telugu', label: 'Telugu' },
 ];
 
 const LiveCallInterface = () => {
@@ -161,29 +170,36 @@ const LiveCallInterface = () => {
             sourceLanguage: userLanguage,
             targetLanguage: 'english',
           });
+        
+        const finalEnglishTranslation = englishTranslation || "[Translation Error]";
 
         setConversation(prev =>
           prev.map(t =>
-            t.id === userTurn.id ? { ...t, translation: englishTranslation } : t
+            t.id === userTurn.id ? { ...t, translation: finalEnglishTranslation } : t
           )
         );
 
         const userHistoryItem: ChatHistoryItem = {
           role: 'user',
-          content: [{ text: englishTranslation }],
+          content: [{ text: finalEnglishTranslation }],
         };
-        const updatedChatHistory = [...chatHistory, userHistoryItem];
-
+        
+        // Pass the latest history to the bot
+        const historyForBot = [...chatHistory, userHistoryItem];
+        
         const { response: botEnglishResponse } = await chatWithBot({
-          query: englishTranslation,
-          history: updatedChatHistory,
+          query: finalEnglishTranslation,
+          history: historyForBot,
         });
 
         const botHistoryItem: ChatHistoryItem = {
           role: 'model',
           content: [{ text: botEnglishResponse }],
         };
-        setChatHistory(prev => [...prev, botHistoryItem]);
+        
+        // Update the main chat history state
+        setChatHistory(prev => [...prev, userHistoryItem, botHistoryItem]);
+
 
         const {
           translatedText: botForeignResponse,
@@ -211,15 +227,16 @@ const LiveCallInterface = () => {
           }
         }
         setIsProcessing(false);
-        setUserTranscript(''); // Reset transcript after processing
+        setUserTranscript('');
       }
     };
 
     if (!isListening && userTranscript) {
       processUserTurn();
     }
-  }, [isListening, userTranscript, userLanguage, chatHistory]);
-
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isListening, userTranscript]);
+  
   // Scroll transcript to bottom
   useEffect(() => {
     transcriptEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -266,7 +283,6 @@ const LiveCallInterface = () => {
     <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-3">
       {/* Left Column: Video Feeds and Controls */}
       <div className="flex flex-col gap-4 lg:col-span-2">
-        {/* Main Video Feed */}
         <div className="relative flex-1 overflow-hidden rounded-lg bg-card">
           {remoteUser && (
             <Image
@@ -286,19 +302,29 @@ const LiveCallInterface = () => {
               <div className="h-2 w-2 rounded-full bg-red-500" />
               <span>LIVE</span>
             </div>
-            <Button size="icon" variant="ghost" className="text-white">
-              <Expand />
-            </Button>
+             <div className='w-48'>
+                <Label htmlFor="userLanguage" className='text-white'>Your Language</Label>
+                <Select value={userLanguage} onValueChange={setUserLanguage}>
+                  <SelectTrigger id="userLanguage" className='text-white'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.map(l => (
+                      <SelectItem key={l.value} value={l.value}>
+                        {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+            </div>
           </div>
 
-          {/* Bottom Info */}
           <div className="absolute bottom-4 left-4 text-white">
-            <p className="font-bold">Ana (AI Persona)</p>
+            <p className="font-bold">Ana (AI Friend)</p>
             <p className="text-xs">London, UK</p>
           </div>
 
-          {/* My Video Feed */}
-          <div className="absolute right-4 top-16 h-24 w-40 overflow-hidden rounded-md border-2 border-primary/50 bg-secondary shadow-lg md:h-32 md:w-56">
+          <div className="absolute bottom-4 right-4 h-24 w-40 overflow-hidden rounded-md border-2 border-primary/50 bg-secondary shadow-lg md:h-32 md:w-56">
             <video
               ref={videoRef}
               className="h-full w-full -scale-x-100 transform object-cover"
@@ -348,48 +374,13 @@ const LiveCallInterface = () => {
             </Button>
           </div>
         </div>
-
-        {/* Other Participants */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card className="bg-card/50">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Meeting Insights
-              </CardTitle>
-              <Lightbulb className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-xs text-muted-foreground">
-                AI is generating insights...
-              </div>
-            </CardContent>
-          </Card>
-          {participants.map(p => {
-            const img = getPlaceholderImage(p.id);
-            return (
-              <div
-                key={p.id}
-                className="flex items-center justify-between gap-3 rounded-lg bg-card/50 p-3"
-              >
-                <div className="flex items-center gap-3">
-                  <Avatar>
-                    {img && <AvatarImage src={img.imageUrl} />}
-                    <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-sm font-medium">{p.name}</span>
-                </div>
-                <MicOff className="h-4 w-4 text-muted-foreground" />
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* Right Column: Chat Room */}
       <Card className="flex h-full flex-col bg-card/50 lg:col-span-1">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Chat Room</CardTitle>
-          <MoreVertical className="h-5 w-5 text-muted-foreground" />
+        <CardHeader>
+          <CardTitle>Live Transcript</CardTitle>
+          <CardDescription>Real-time translation of your call.</CardDescription>
         </CardHeader>
         <ScrollArea className="flex-1 px-4">
           <div className="space-y-6">
@@ -439,18 +430,8 @@ const LiveCallInterface = () => {
             <div ref={transcriptEndRef} />
           </div>
         </ScrollArea>
-        <CardFooter className="pt-4">
-          <div className="relative w-full">
-            <Input placeholder="Type a message..." className="pr-10" />
-            <Button
-              type="submit"
-              size="icon"
-              variant="ghost"
-              className="absolute right-1 top-1/2 -translate-y-1/2"
-            >
-              <MessageCircle />
-            </Button>
-          </div>
+        <CardFooter className="pt-4 border-t">
+           <p className="text-xs text-muted-foreground text-center w-full">This is a demo. Conversation is with an AI.</p>
         </CardFooter>
       </Card>
       <audio ref={audioRef} className="hidden" />
@@ -462,6 +443,7 @@ export default function LiveCallPage() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isFounder, setIsFounder] = useState(false);
   const { toast } = useToast();
+  const user = useUser();
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -486,6 +468,10 @@ export default function LiveCallPage() {
       description: 'You can now access the Live Call feature.',
     });
   };
+  
+  if (!user) {
+    return <div className="h-full" />;
+  }
 
   return (
     <div className="h-full">
