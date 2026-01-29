@@ -440,8 +440,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <main
               className={cn(
                 'flex-1',
-                pathname === '/dashboard' || pathname === '/dashboard/live-call'
-                  ? 'overflow-hidden'
+                pathname === '/dashboard/live-call'
+                  ? 'flex flex-col'
                   : 'overflow-auto p-4 sm:p-6'
               )}
             >
