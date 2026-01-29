@@ -12,15 +12,18 @@ declare global {
 
 type UseSpeechRecognitionProps = {
   lang: string;
+  onFinal?: (transcript: string) => void;
 };
 
 export const useSpeechRecognition = ({
   lang,
+  onFinal,
 }: UseSpeechRecognitionProps) => {
   const [isListening, setIsListening] = useState(false);
   const [isAvailable, setIsAvailable] = useState(false);
   const [transcript, setTranscript] = useState('');
   const recognitionRef = useRef<any | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -29,58 +32,85 @@ export const useSpeechRecognition = ({
     if (SpeechRecognition) {
       setIsAvailable(true);
       const recognition = new SpeechRecognition();
-      recognition.continuous = true; // Keep listening even after a pause
-      recognition.interimResults = true; // Get results as they are being processed
+      recognition.continuous = true;
+      recognition.interimResults = true;
       recognition.lang = lang;
 
       let finalTranscript = '';
-      
+
       recognition.onresult = (event: any) => {
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
+
         let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        finalTranscript = ''; // Reset final transcript on new result
+
+        for (let i = 0; i < event.results.length; ++i) {
           if (event.results[i].isFinal) {
             finalTranscript += event.results[i][0].transcript;
           } else {
             interimTranscript += event.results[i][0].transcript;
           }
         }
-        setTranscript(finalTranscript + interimTranscript);
+        setTranscript(interimTranscript);
+
+        if (finalTranscript) {
+          if (onFinal) {
+            onFinal(finalTranscript.trim());
+          }
+          recognition.stop();
+        } else {
+           timeoutRef.current = setTimeout(() => {
+             recognition.stop();
+           }, 3000); // Stop after 3 seconds of silence
+        }
       };
 
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
-        setIsListening(false);
+        if (event.error === 'no-speech') {
+          // Ignore no-speech errors, which can happen if user is silent
+        } else {
+          setIsListening(false);
+        }
       };
 
       recognition.onend = () => {
-        // When recognition ends, the final part of the transcript is the complete sentence.
-        if (finalTranscript) {
-          setTranscript(finalTranscript);
-        }
         setIsListening(false);
+        setTranscript('');
       };
       
       recognitionRef.current = recognition;
 
       return () => {
-        recognition.stop();
+        if (recognitionRef.current) {
+          recognitionRef.current.stop();
+        }
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+        }
       };
     } else {
       setIsAvailable(false);
     }
-  }, [lang]);
+  }, [lang, onFinal]);
 
-  const toggleListening = useCallback(() => {
-    if (recognitionRef.current) {
-      if (isListening) {
-        recognitionRef.current.stop();
-      } else {
-        setTranscript(''); // Clear previous transcript before starting new recognition
-        recognitionRef.current.start();
-      }
-      setIsListening(prev => !prev);
+  const startListening = useCallback(() => {
+    if (recognitionRef.current && !isListening) {
+      setTranscript('');
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  }, [isListening]);
+  
+  const stopListening = useCallback(() => {
+    if (recognitionRef.current && isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
     }
   }, [isListening]);
 
-  return { isListening, isAvailable, toggleListening, transcript };
+
+  return { isListening, isAvailable, startListening, stopListening, transcript };
 };
