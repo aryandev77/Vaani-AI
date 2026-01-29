@@ -11,7 +11,7 @@ import {
 } from 'firebase/auth';
 import {
   ref as storageRef,
-  uploadBytesResumable,
+  uploadBytes,
   getDownloadURL,
 } from 'firebase/storage';
 import {
@@ -62,7 +62,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { getPlaceholderImage } from '@/lib/placeholder-images';
 import { useToast } from '@/hooks/use-toast';
@@ -83,7 +82,6 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState('');
 
   const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isAdmin, setIsAdmin] = useState(false);
@@ -158,41 +156,31 @@ export default function SettingsPage() {
     }
   };
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user || !storage) return;
 
     setUploading(true);
     const filePath = `profile-pictures/${user.uid}/${file.name}`;
     const fileRef = storageRef(storage, filePath);
-    const uploadTask = uploadBytesResumable(fileRef, file);
 
-    uploadTask.on(
-      'state_changed',
-      snapshot => {
-        const progress =
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      error => {
-        console.error('Upload failed:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Upload failed',
-          description: 'Could not upload your profile picture.',
-        });
-        setUploading(false);
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then(async downloadURL => {
-          if (!user) return;
-          await updateProfile(user, { photoURL: downloadURL });
-          toast({ title: 'Profile picture updated!' });
-          setUploading(false);
-        });
-      }
-    );
+    try {
+      const uploadTask = await uploadBytes(fileRef, file);
+      const downloadURL = await getDownloadURL(uploadTask.ref);
+      await updateProfile(user, { photoURL: downloadURL });
+      toast({ title: 'Profile picture updated!' });
+    } catch (error: any) {
+      console.error('Upload failed:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Upload failed',
+        description: 'Could not upload your profile picture.',
+      });
+    } finally {
+      setUploading(false);
+    }
   };
+
 
   const handleAdminUnlock = () => {
     if (secretCode === ADMIN_SECRET_CODE) {
@@ -320,20 +308,11 @@ export default function SettingsPage() {
                   onClick={() => fileInputRef.current?.click()}
                   disabled={uploading}
                 >
-                  {uploading ? 'Uploading...' : 'Change Photo'}
+                  Change Photo
                 </Button>
-                {uploading ? (
-                  <div className="flex w-32 items-center gap-2">
-                    <Progress value={uploadProgress} className="w-full" />
-                    <span className="text-sm text-muted-foreground">
-                      {Math.round(uploadProgress)}%
-                    </span>
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">
-                    JPG, GIF or PNG. 1MB max.
-                  </p>
-                )}
+                <p className="text-sm text-muted-foreground">
+                  JPG, GIF or PNG. 1MB max.
+                </p>
               </div>
             </div>
             <Separator />
