@@ -1,12 +1,7 @@
 
 'use server';
 
-import {
-  collection,
-  addDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
-
+import { headers } from 'next/headers';
 import type {
   TranslationState,
   InsightState,
@@ -16,14 +11,39 @@ import type {
   ScriptureChatState,
   PlayAudioState,
 } from './definitions';
-import { realTimeTranslationWithContext } from '@/ai/flows/real-time-translation-with-context';
-import { summarizeCulturalInsights } from '@/ai/flows/summarize-cultural-insights';
-import { detectAndPreserveEmotion } from '@/ai/flows/detect-and-preserve-emotion';
-import { textToSpeech } from '@/ai/flows/text-to-speech';
-import { chatWithBot } from '@/ai/flows/chatbot';
-import { scriptureTutor } from '@/ai/flows/scripture-tutor';
-import { imageToText } from '@/ai/flows/image-to-text';
-import { checkForFauxPas } from '@/ai/flows/cultural-faux-pas-alert';
+
+async function callFlow<T>(flowName: string, input: any): Promise<T> {
+  const headersList = headers();
+  // In a server component, we can get the host from the headers.
+  const host = headersList.get('host') || 'localhost:3000';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const baseUrl = `${protocol}://${host}`;
+  const url = `${baseUrl}/api/genkit/${flowName}`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(input),
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error(
+        `Error calling flow ${flowName}: ${response.status} ${response.statusText}`,
+        errorBody
+      );
+      throw new Error(`API call to ${flowName} failed.`);
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error(`Exception calling flow ${flowName}:`, error);
+    throw error;
+  }
+}
 
 export async function handleTranslation(
   prevState: TranslationState,
@@ -39,18 +59,26 @@ export async function handleTranslation(
   if (formalityValue === '1') formality = 'Casual';
   if (formalityValue === '3') formality = 'Formal';
 
+  const translationInput = {
+    text,
+    sourceLanguage,
+    targetLanguage,
+    culturalContext,
+    formality,
+  };
+
   try {
-    const translationResult = await realTimeTranslationWithContext({
-      text,
-      sourceLanguage,
-      targetLanguage,
-      culturalContext,
-      formality,
-    });
+    const translationResult = await callFlow<any>(
+      'realTimeTranslationWithContextFlow',
+      translationInput
+    );
 
     let audioData = '';
     if (translationResult.translatedText) {
-      const ttsResult = await textToSpeech(translationResult.translatedText);
+      const ttsResult = await callFlow<any>(
+        'textToSpeechFlow',
+        translationResult.translatedText
+      );
       audioData = ttsResult.audioData;
     }
 
@@ -81,7 +109,9 @@ export async function handleInsight(
   const conversationText = formData.get('conversationText') as string;
 
   try {
-    const result = await summarizeCulturalInsights({ conversationText });
+    const result = await callFlow<any>('summarizeCulturalInsightsFlow', {
+      conversationText,
+    });
     return {
       culturalSummary: result.culturalSummary,
     };
@@ -108,7 +138,10 @@ export async function handleEmotion(
   }
 
   try {
-    const result = await detectAndPreserveEmotion({ text, targetLanguage });
+    const result = await callFlow<any>('detectAndPreserveEmotionFlow', {
+      text,
+      targetLanguage,
+    });
     return {
       translatedText: result.translatedText,
       detectedEmotion: result.detectedEmotion,
@@ -142,7 +175,7 @@ export async function handleChat(
   const currentHistory = [...prevState.history, userMessage];
 
   try {
-    const result = await chatWithBot({
+    const result = await callFlow<any>('chatBotFlow', {
       query,
       history: prevState.history, // send previous history for context
     });
@@ -188,7 +221,7 @@ export async function handleScriptureChat(
   const currentHistory = [...prevState.history, userMessage];
 
   try {
-    const result = await scriptureTutor({
+    const result = await callFlow<any>('scriptureTutorFlow', {
       query,
       history: prevState.history,
       scriptureContext,
@@ -225,7 +258,7 @@ export async function extractTextFromImage(
   }
 
   try {
-    const result = await imageToText({ imageDataUri });
+    const result = await callFlow<any>('imageToTextFlow', { imageDataUri });
     return { text: result.text };
   } catch (error) {
     console.error('Error extracting text from image:', error);
@@ -245,7 +278,7 @@ export async function checkCulturalFauxPas(
   }
 
   try {
-    const result = await checkForFauxPas({ text });
+    const result = await callFlow<any>('culturalFauxPasAlertFlow', { text });
     if (result.isFauxPas) {
       return { message: result.message, suggestion: result.suggestion };
     }
@@ -269,7 +302,7 @@ export async function handlePlayMemoAudio(
   }
 
   try {
-    const ttsResult = await textToSpeech(text);
+    const ttsResult = await callFlow<any>('textToSpeechFlow', text);
     return { audioData: ttsResult.audioData, memoId };
   } catch (error) {
     console.error('TTS Error in action', error);
